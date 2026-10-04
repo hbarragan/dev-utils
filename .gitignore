@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+dist/
+artifacts/
+data/
+private/
+trash/
+engines/
+downloads/
+.tools/
+*.user
+*.suo
+*.dat

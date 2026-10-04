@@ -1,0 +1,13 @@
+<Application x:Class="AppUtilDev.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" ShutdownMode="OnExplicitShutdown">
+ <Application.Resources>
+  <SolidColorBrush x:Key="Muted" Color="#94A3B8"/>
+  <DataTemplate x:Key="DropdownText"><TextBlock Text="{Binding}" Foreground="#101B2A" FontSize="12" FontFamily="Segoe UI"/></DataTemplate>
+  <Style TargetType="ComboBox"><Setter Property="ItemTemplate" Value="{StaticResource DropdownText}"/><Setter Property="Foreground" Value="#101B2A"/><Setter Property="Background" Value="#E7EDF5"/><Setter Property="FontSize" Value="12"/></Style>
+  <Style TargetType="ComboBoxItem"><Setter Property="ContentTemplate" Value="{StaticResource DropdownText}"/><Setter Property="Foreground" Value="#101B2A"/><Setter Property="Background" Value="#E7EDF5"/><Setter Property="FontSize" Value="12"/><Style.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter Property="Background" Value="#BDECDD"/><Setter Property="Foreground" Value="#101B2A"/></Trigger></Style.Triggers></Style>
+  <Style TargetType="TextBox"><Setter Property="Foreground" Value="#E7EDF5"/><Setter Property="Background" Value="#182638"/><Setter Property="BorderBrush" Value="#344256"/><Setter Property="Padding" Value="7"/></Style>
+  <Style TargetType="TextBlock"><Setter Property="Foreground" Value="#E7EDF5"/><Setter Property="FontFamily" Value="Segoe UI"/><Setter Property="FontSize" Value="13"/></Style>
+  <Style TargetType="Button"><Setter Property="Background" Value="#243247"/><Setter Property="Foreground" Value="#E7EDF5"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Padding" Value="12,7"/><Setter Property="Margin" Value="3"/><Setter Property="Cursor" Value="Hand"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#354A64"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+ </Application.Resources>
+</Application>
+
+

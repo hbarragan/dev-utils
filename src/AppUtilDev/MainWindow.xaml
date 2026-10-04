@@ -1,0 +1,194 @@
+<Window x:Class="AppUtilDev.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:wv="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+ Title="App Util Dev" Width="570" Height="810" WindowStyle="None" ResizeMode="NoResize" Background="#101B2A" ShowInTaskbar="False" Topmost="True">
+ <Window.Resources>
+  <DataTemplate x:Key="Quota">
+   <StackPanel Margin="0,8,0,0">
+    <DockPanel><TextBlock Text="{Binding Label}" Foreground="{Binding Color}" DockPanel.Dock="Right" FontWeight="SemiBold"/><TextBlock Text="{Binding Name}" Foreground="#CBD5E1"/></DockPanel>
+    <ProgressBar Value="{Binding Remaining}" Maximum="100" Height="5" Background="#293548" Foreground="{Binding Color}" BorderThickness="0" Margin="0,6,0,5"/>
+    <TextBlock Text="{Binding Reset}" FontSize="11" Foreground="{StaticResource Muted}"/>
+   </StackPanel>
+ </DataTemplate>
+  <DataTemplate x:Key="MemoryApp">
+   <Border Background="#182638" CornerRadius="9" Padding="10" Margin="0,0,0,8"><StackPanel>
+    <DockPanel><TextBlock Text="{Binding Memory}" DockPanel.Dock="Right" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/></DockPanel>
+    <DockPanel Margin="0,4,0,3"><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><Button Content="Cerrar app" Tag="{Binding}" Click="CloseMemoryApp_Click" IsEnabled="{Binding CanClose}" Padding="8,4" FontSize="11"/><Button Content="Finalizar app" Tag="{Binding}" Click="KillMemoryApp_Click" IsEnabled="{Binding CanClose}" Padding="8,4" FontSize="11" Foreground="#FFACAC"/></StackPanel><TextBlock Text="{Binding Summary}" FontSize="11" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/></DockPanel>
+    <Expander Header="Ver procesos" IsExpanded="{Binding Expanded, Mode=OneWay}" Expanded="MemoryApp_ExpansionChanged" Collapsed="MemoryApp_ExpansionChanged" Foreground="#CBD5E1" FontSize="11"><ItemsControl ItemTemplate="{DynamicResource Process}" Style="{DynamicResource LazyProcesses}"/></Expander>
+   </StackPanel></Border>
+  </DataTemplate>
+  <Style x:Key="LazyProcesses" TargetType="ItemsControl">
+   <Style.Triggers><DataTrigger Binding="{Binding IsExpanded, RelativeSource={RelativeSource AncestorType=Expander}}" Value="True"><Setter Property="ItemsSource" Value="{Binding Processes}"/></DataTrigger></Style.Triggers>
+  </Style>
+  <DataTemplate x:Key="Process">
+   <Border Background="#182638" CornerRadius="9" Padding="12" Margin="0,0,0,7">
+    <StackPanel>
+     <DockPanel><TextBlock Text="{Binding Memory}" DockPanel.Dock="Right" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14"/></DockPanel>
+     <WrapPanel Margin="0,4,0,0">
+      <TextBlock Text="{Binding PidLabel}" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" Margin="0,0,7,0" ToolTip="{Binding Path}"/>
+      <TextBlock Text="{Binding PortHint}" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center"/>
+      <ItemsControl ItemsSource="{Binding PortLinks}">
+       <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+       <ItemsControl.ItemTemplate><DataTemplate>
+        <TextBlock FontSize="11" Margin="0,0,9,0" VerticalAlignment="Center"><Hyperlink NavigateUri="{Binding Url}" RequestNavigate="PortLink_RequestNavigate" Foreground="#7DD3FC" ToolTip="{Binding Url}"><Run Text="{Binding Label, Mode=OneWay}"/></Hyperlink></TextBlock>
+       </DataTemplate></ItemsControl.ItemTemplate>
+      </ItemsControl>
+     </WrapPanel>
+     <DockPanel Margin="0,4,0,0">
+      <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+       <Button Content="Cerrar" Padding="9,5" FontSize="11" Click="CloseProcess_Click" Tag="{Binding}" IsEnabled="{Binding CanClose}" ToolTip="Solicitar cierre de la ventana"/>
+       <Button Content="Finalizar" Padding="9,5" FontSize="11" Click="KillProcess_Click" Tag="{Binding}" IsEnabled="{Binding CanClose}" Foreground="#FFACAC" ToolTip="Finalizar este proceso tras confirmar"/>
+      </StackPanel>
+      <TextBlock Text="{Binding Activity}" Foreground="{Binding StatusColor}" FontSize="10" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="220"/>
+     </DockPanel>
+    </StackPanel>
+   </Border>
+  </DataTemplate>
+ </Window.Resources>
+ <Border Background="#101B2A" CornerRadius="16" BorderBrush="#344256" BorderThickness="1" Padding="20">
+  <Grid>
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <DockPanel Margin="0,0,0,16">
+    <Button Content="✕" Click="Hide_Click" DockPanel.Dock="Right" Background="#101B2A" ToolTip="Ocultar en la bandeja"/>
+    <Button x:Name="PortalModeButton" Content="Abrir portal ↗" Click="PortalMode_Click" DockPanel.Dock="Right" VerticalAlignment="Top" FontSize="11" Padding="9,6"/>
+    <StackPanel><DockPanel><TextBlock Text="APP UTIL DEV" FontSize="11" Foreground="#65DDB0" FontWeight="Bold"/><TextBlock x:Name="SelfMemory" Visibility="Collapsed" Text="RAM app · …" Foreground="#718096" FontSize="10" HorizontalAlignment="Right" ToolTip="RAM residente del proceso de App Util"/></DockPanel><TextBlock Text="Tu espacio de desarrollo" FontSize="22" FontWeight="SemiBold" Margin="0,5,0,0"/><TextBlock Text="IA · procesos · bases de datos" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,5,0,0"/></StackPanel>
+   </DockPanel>
+   <Border x:Name="EquipmentSummary" Grid.Row="1" Background="#182638" CornerRadius="9" Padding="12" Margin="0,0,0,14">
+    <StackPanel><DockPanel><TextBlock x:Name="MemorySummary" FontWeight="SemiBold"/><TextBlock x:Name="ScanStatus" DockPanel.Dock="Right" Foreground="{StaticResource Muted}" FontSize="11" HorizontalAlignment="Right"/></DockPanel><DockPanel Margin="0,8,0,0"><TextBlock x:Name="GpuLabel" Text="GPU · consultando…" FontSize="11" Foreground="#7DD3FC"/><TextBlock x:Name="GpuMemory" Foreground="{StaticResource Muted}" FontSize="10" HorizontalAlignment="Right"/></DockPanel><ProgressBar x:Name="GpuBar" Height="3" Maximum="100" Background="#293548" Foreground="#7DD3FC" BorderThickness="0" Margin="0,5,0,0"/></StackPanel>
+   </Border>
+   <TabControl x:Name="Tabs" Grid.Row="2" TabStripPlacement="Left" SelectionChanged="PortalTab_Changed" Background="Transparent" BorderThickness="0" Foreground="#E7EDF5">
+    <TabControl.Resources>
+     <Style TargetType="TabItem"><Setter Property="FontFamily" Value="Segoe UI Emoji"/><Setter Property="FontSize" Value="22"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TabItem"><Border x:Name="Head" Width="48" Height="48" Margin="0,0,12,8" CornerRadius="9" Background="#243247" BorderBrush="Transparent" BorderThickness="1"><ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"><ContentPresenter.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" FontFamily="Segoe UI Emoji" FontSize="22" Foreground="#E7EDF5"/></DataTemplate></ContentPresenter.ContentTemplate></ContentPresenter></Border><ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter TargetName="Head" Property="BorderBrush" Value="#65DDB0"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+    </TabControl.Resources>
+    <TabItem x:Name="HomeTab" Header="⌂" ToolTip="Home" AutomationProperties.Name="Home">
+     <Grid Margin="6,0,0,0">
+      <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+      <Border Background="#182638" CornerRadius="10" Padding="12" Margin="0,0,5,8"><DockPanel>
+       <Button Content="Procesos" Tag="runtimes" Click="HomeNavigate_Click" DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontSize="11" Padding="12,6"/>
+       <TextBlock Text="Servicios locales" FontWeight="SemiBold" DockPanel.Dock="Top" Margin="0,0,0,7"/>
+       <StackPanel><TextBlock x:Name="HomeRuntimeSummary" Text="Leyendo procesos…" Foreground="#7DD3FC" FontSize="11" TextTrimming="CharacterEllipsis"/><TextBlock x:Name="HomeRuntimeHint" FontSize="10" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/>
+        <ItemsControl x:Name="HomePorts"><ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="0,5,0,0"><TextBlock FontSize="11" Text="{Binding Name}" TextTrimming="CharacterEllipsis"/><ItemsControl ItemsSource="{Binding PortLinks}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><TextBlock FontSize="10" Margin="0,0,8,0"><Hyperlink NavigateUri="{Binding Url}" RequestNavigate="PortLink_RequestNavigate" Foreground="#7DD3FC"><Run Text="{Binding Label, Mode=OneWay}"/></Hyperlink></TextBlock></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></StackPanel></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+       </StackPanel>
+      </DockPanel></Border>
+      <Border Grid.Column="1" Background="#182638" CornerRadius="10" Padding="12" Margin="5,0,0,8"><DockPanel>
+       <Button Content="Consumo IA" Tag="usage" Click="HomeNavigate_Click" DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontSize="11" Padding="12,6"/>
+       <TextBlock Text="Cuotas de IA" FontWeight="SemiBold" DockPanel.Dock="Top" Margin="0,0,0,7"/>
+       <StackPanel><ItemsControl x:Name="HomeQuotas"><ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="0,0,0,6"><TextBlock Text="{Binding Name}" FontSize="10" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Label}" Foreground="{Binding Color}" FontSize="12"/><ProgressBar Value="{Binding Remaining}" Maximum="100" Height="3" Foreground="{Binding Color}" Background="#293548" BorderThickness="0" Margin="0,3,0,0"/></StackPanel></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><TextBlock x:Name="HomeAiHint" Text="Conecta tus cuentas" FontSize="11" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/></StackPanel>
+      </DockPanel></Border>
+      <Border Grid.Row="1" Background="#182638" CornerRadius="10" Padding="12" Margin="0,0,5,8"><DockPanel>
+       <Button Content="Memoria" Tag="memory" Click="HomeNavigate_Click" DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontSize="11" Padding="12,6"/>
+       <TextBlock Text="Memoria" FontWeight="SemiBold" DockPanel.Dock="Top" Margin="0,0,0,7"/>
+       <StackPanel><TextBlock x:Name="HomeMemorySummary" Text="—" Foreground="#65DDB0" FontSize="21"/><TextBlock x:Name="HomeMemoryTop" Foreground="{StaticResource Muted}" FontSize="10" Margin="0,5,0,0" TextTrimming="CharacterEllipsis"/></StackPanel>
+      </DockPanel></Border>
+      <Border Grid.Row="1" Grid.Column="1" Background="#182638" CornerRadius="10" Padding="12" Margin="5,0,0,8"><DockPanel>
+       <Button Content="Discos" Tag="disks" Click="HomeNavigate_Click" DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontSize="11" Padding="12,6"/>
+       <TextBlock Text="Espacio libre" FontWeight="SemiBold" DockPanel.Dock="Top" Margin="0,0,0,7"/>
+       <TextBlock x:Name="HomeDisks" Text="Leyendo discos…" FontSize="12" Foreground="#65DDB0" TextWrapping="Wrap"/>
+      </DockPanel></Border>
+      <Border Grid.Row="2" Background="#182638" CornerRadius="10" Padding="12" Margin="0,0,5,0"><DockPanel>
+       <Button x:Name="HomeSqlButton" Content="Bases de datos" Tag="sql" Click="HomeNavigate_Click" DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontSize="11" Padding="12,6"/>
+       <TextBlock Text="Bases de datos" FontWeight="SemiBold" DockPanel.Dock="Top" Margin="0,0,0,7"/>
+       <StackPanel><TextBlock x:Name="HomeSqlSummary" Text="Conectando…" Foreground="#65DDB0" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/><TextBlock x:Name="HomeSqlDetails" Foreground="{StaticResource Muted}" FontSize="10" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel>
+      </DockPanel></Border>
+      <Border Grid.Row="2" Grid.Column="1" Background="#182638" CornerRadius="10" Padding="12" Margin="5,0,0,0"><DockPanel>
+       <Button Content="Internet" Tag="network" Click="HomeNavigate_Click" DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontSize="11" Padding="12,6"/>
+       <TextBlock Text="Internet · hoy" FontWeight="SemiBold" DockPanel.Dock="Top" Margin="0,0,0,7"/>
+       <StackPanel><TextBlock x:Name="HomeTraffic" Text="— GB / — GB" Foreground="#65DDB0" FontSize="16"/><TextBlock Text="Descarga / subida" Foreground="{StaticResource Muted}" FontSize="10"/><TextBlock x:Name="HomeInternetSpeed" Text="Prueba cada minuto" Foreground="#7DD3FC" FontSize="11" Margin="0,6,0,0"/><TextBlock x:Name="HomeNetworkSummary" FontSize="10" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/><TextBlock x:Name="HomeVpn" Visibility="Collapsed"/></StackPanel>
+      </DockPanel></Border>
+      <TextBlock x:Name="HomeUpdated" Visibility="Collapsed"/>
+     </Grid>
+    </TabItem>
+    <TabItem x:Name="UsageTab" Header="🤖" ToolTip="Consumo IA" AutomationProperties.Name="Consumo IA">
+     <Viewbox Stretch="Uniform" StretchDirection="DownOnly"><Border Width="430">
+      <StackPanel>
+       <Border Background="#182638" CornerRadius="10" Padding="15" Margin="0,0,0,12">
+        <StackPanel>
+         <DockPanel><Button Content="↻" Click="RefreshUsage_Click" DockPanel.Dock="Right" ToolTip="Consultar límites"/><TextBlock Text="ChatGPT / Codex" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
+         <TextBlock Text="Cuotas informadas por tu cuenta en Codex" Foreground="{StaticResource Muted}" FontSize="12"/>
+         <ItemsControl x:Name="CodexQuotas" ItemTemplate="{StaticResource Quota}"/>
+         <TextBlock x:Name="CodexStatus" Text="Consultando…" TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,10,0,0"/>
+        </StackPanel>
+       </Border>
+       <Border Background="#182638" CornerRadius="10" Padding="15">
+        <StackPanel>
+         <DockPanel><Button Content="Conectar" Click="Claude_Click" DockPanel.Dock="Right"/><TextBlock Text="Claude" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
+         <TextBlock Text="Sesión y semana · página de uso" Foreground="{StaticResource Muted}" FontSize="12"/>
+         <ItemsControl x:Name="ClaudeQuotas" ItemTemplate="{StaticResource Quota}"/>
+         <TextBlock x:Name="ClaudeStatus" Text="Conecta tu cuenta para leer los porcentajes visibles." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,10,0,0"/>
+        </StackPanel>
+       </Border>
+       <TextBlock Text="Los planes ofrecen cuotas de uso, no un saldo fijo de tokens. Los límites de Codex no representan todos los modelos de la web de ChatGPT." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="12" Margin="4,15,4,0"/>
+       <Button Content="Abrir ChatGPT" Click="ChatGpt_Click" HorizontalAlignment="Left" Margin="0,14,0,0"/>
+      </StackPanel>
+     </Border></Viewbox>
+    </TabItem>
+    <TabItem x:Name="RuntimeTab" Header="⚙" ToolTip="Node / Java" AutomationProperties.Name="Node / Java">
+     <DockPanel Margin="6,0,0,0">
+      <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12"><Button x:Name="OptimizeButton" Content="Optimizar" Click="Optimize_Click" DockPanel.Dock="Right"/><ComboBox x:Name="RuntimeFilter" Width="170" HorizontalAlignment="Left" SelectedIndex="0" SelectionChanged="RuntimeFilter_Changed"><ComboBoxItem Content="Todos"/><ComboBoxItem Content="Con puerto"/><ComboBoxItem Content="Node.js"/><ComboBoxItem Content="Java / JDK"/><ComboBoxItem Content="Protegidos"/></ComboBox></DockPanel>
+      <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0"><Button x:Name="RuntimeNext" Content="Siguiente ›" Click="RuntimeNext_Click" DockPanel.Dock="Right"/><Button x:Name="RuntimePrev" Content="‹ Anterior" Click="RuntimePrev_Click" DockPanel.Dock="Left"/><TextBlock x:Name="RuntimePage" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Center"/></DockPanel>
+      <TextBlock x:Name="RuntimeEmpty" DockPanel.Dock="Bottom" Foreground="{StaticResource Muted}"/>
+      <Viewbox Stretch="Uniform" StretchDirection="DownOnly"><ItemsControl x:Name="RuntimeList" ItemTemplate="{StaticResource Process}" Width="430"/></Viewbox>
+     </DockPanel>
+    </TabItem>
+    <TabItem x:Name="MemoryTab" Header="▥" ToolTip="Memoria" AutomationProperties.Name="Memoria">
+     <DockPanel>
+      <TextBlock DockPanel.Dock="Top" Text="Aplicaciones > 100 MB en total · de mayor a menor" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,0,12"/>
+      <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+       <Button x:Name="NextButton" Content="Siguiente ›" DockPanel.Dock="Right" Click="Next_Click"/>
+       <Button x:Name="PrevButton" Content="‹ Anterior" DockPanel.Dock="Left" Click="Prev_Click"/>
+       <TextBlock x:Name="PageLabel" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/>
+      </DockPanel>
+      <Viewbox Stretch="Uniform" StretchDirection="DownOnly"><Border Width="430"><StackPanel><ItemsControl x:Name="MemoryList" ItemTemplate="{StaticResource MemoryApp}"/><TextBlock x:Name="MemoryEmpty" Foreground="{StaticResource Muted}"/></StackPanel></Border></Viewbox>
+     </DockPanel>
+    </TabItem>
+    <TabItem x:Name="NetworkTab" Header="🌐" ToolTip="Internet y VPN" AutomationProperties.Name="Internet y VPN">
+     <Viewbox Stretch="Uniform" StretchDirection="DownOnly"><Border Width="430"><StackPanel>
+      <TextBlock x:Name="NetworkDiagnosis" Text="Esperando primera muestra…" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,5,0,10"/>
+      <Border Background="#182638" CornerRadius="9" Padding="12" Margin="0,0,0,10"><StackPanel><TextBlock Text="Prueba de descarga y subida" FontWeight="SemiBold"/><TextBlock x:Name="NetworkSpeed" Text="Prueba pendiente…" Foreground="#65DDB0" FontSize="18" Margin="0,6,0,0"/><TextBlock x:Name="NetworkSpeedStatus" Text="Cada minuto · también en segundo plano" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,4,0,0"/><Button Content="Probar ahora" Click="TestInternet_Click" HorizontalAlignment="Center" Margin="0,8,0,0"/></StackPanel></Border>
+      <TextBlock x:Name="NetworkTime" Foreground="{StaticResource Muted}" FontSize="11"/>
+      <Border Background="#182638" CornerRadius="9" Padding="12" Margin="0,12,0,10"><TextBlock x:Name="NetworkProbes" TextWrapping="Wrap"/></Border>
+      <TextBlock Text="Tráfico por adaptador" FontWeight="SemiBold"/>
+      <TextBlock x:Name="NetworkTraffic" TextWrapping="Wrap" Foreground="#65DDB0" FontSize="12" Margin="0,8,0,12"/>
+      <Expander Header="Adaptadores, IP, gateway y DNS" Foreground="#E7EDF5" Margin="0,0,0,12"><ItemsControl x:Name="NetworkAdapters"><ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,8"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></Expander>
+      <TextBlock Text="Cambios recientes" FontWeight="SemiBold"/>
+      <TextBlock x:Name="NetworkChanges" TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,6,0,12"/>
+      <TextBlock Text="Destino interno para comprobar tu VPN (host o IP)" Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"/>
+      <DockPanel Margin="0,6,0,6"><TextBox x:Name="VpnPortBox" Width="55" DockPanel.Dock="Right" Margin="6,0,0,0" ToolTip="Puerto TCP"/><TextBox x:Name="VpnHostBox" ToolTip="Ejemplo: servidor.interno o 192.168.5.9"/></DockPanel>
+      <StackPanel Orientation="Horizontal"><Button Content="Guardar destino" Click="SaveVpn_Click"/><Button Content="Revisar ahora" Click="RefreshNetwork_Click"/></StackPanel>
+      <Button Content="Abrir registro TXT del día" Click="OpenNetworkLog_Click" HorizontalAlignment="Left" Margin="0,10,0,6"/>
+      <TextBlock Text="Diagnóstico cada 15 s. Prueba de transferencia cada minuto." TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource Muted}"/>
+     </StackPanel></Border></Viewbox>
+    </TabItem>
+    <TabItem x:Name="DatabaseTab" Header="🗄" ToolTip="Bases de datos" AutomationProperties.Name="Bases de datos">
+     <Grid>
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+      <DockPanel Margin="0,0,0,10"><Button x:Name="SqlRetryButton" Content="Reintentar" Click="RetrySql_Click" DockPanel.Dock="Right" Visibility="Collapsed"/><TextBlock x:Name="SqlStatus" Text="Conectando…" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center" TextWrapping="Wrap"/></DockPanel>
+      <wv:WebView2 x:Name="SqlBrowser" Grid.Row="1" DefaultBackgroundColor="#101B2A"/>
+     </Grid>
+    </TabItem>
+    <TabItem x:Name="DiskTab" Header="💾" ToolTip="Discos" AutomationProperties.Name="Discos">
+     <DockPanel Margin="6,0,0,0"><TextBlock Text="Espacio de tus discos" DockPanel.Dock="Top" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,16"/>
+      <DockPanel DockPanel.Dock="Bottom"><Button x:Name="DiskNext" Content="Siguiente ›" Click="DiskNext_Click" DockPanel.Dock="Right"/><Button x:Name="DiskPrev" Content="‹ Anterior" Click="DiskPrev_Click" DockPanel.Dock="Left"/><TextBlock x:Name="DiskPage" VerticalAlignment="Center" HorizontalAlignment="Center"/></DockPanel>
+      <ItemsControl x:Name="DiskList"><ItemsControl.ItemTemplate><DataTemplate><Border Background="#182638" CornerRadius="10" Padding="16" Margin="0,0,0,12"><StackPanel><TextBlock Text="{Binding Summary}" Foreground="#65DDB0" FontSize="14" TextWrapping="Wrap"/><ProgressBar Value="{Binding FreePercent}" Maximum="100" Foreground="#65DDB0" Background="#293548" BorderThickness="0" Height="5" Margin="0,12,0,0"/></StackPanel></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+     </DockPanel>
+    </TabItem>
+    <TabItem x:Name="SettingsTab" Header="🔧" ToolTip="Ajustes" AutomationProperties.Name="Ajustes">
+     <Viewbox Stretch="Uniform" StretchDirection="DownOnly"><Border Width="430"><StackPanel>
+      <TextBlock Text="Posición del menú" FontSize="17" FontWeight="SemiBold" Margin="0,8,0,6"/>
+      <ComboBox x:Name="MenuPositionChoice" Width="180" HorizontalAlignment="Center" Margin="0,0,0,14" SelectionChanged="MenuPosition_Changed"><ComboBoxItem Content="Arriba" Tag="Top"/><ComboBoxItem Content="Abajo" Tag="Bottom"/><ComboBoxItem Content="Izquierda" Tag="Left"/><ComboBoxItem Content="Derecha" Tag="Right"/></ComboBox>
+      <TextBlock Text="Segundo plano" FontSize="17" FontWeight="SemiBold" Margin="0,8,0,14"/>
+      <CheckBox x:Name="AutoStart" Content="Iniciar al entrar en Windows" Foreground="#E7EDF5" Checked="AutoStart_Changed" Unchecked="AutoStart_Changed" Margin="0,0,0,20"/>
+      <TextBlock Text="Minutos sin actividad para marcar en verde" Foreground="{StaticResource Muted}"/>
+      <ComboBox x:Name="IdleChoice" Margin="0,8,0,20" Width="100" HorizontalAlignment="Left" SelectionChanged="IdleChoice_Changed"><ComboBoxItem Content="2"/><ComboBoxItem Content="4"/><ComboBoxItem Content="8"/><ComboBoxItem Content="15"/></ComboBox>
+      <TextBlock Text="Ejecutable Codex" Foreground="{StaticResource Muted}"/>
+      <TextBlock x:Name="CodexPathLabel" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,8"/>
+      <Button Content="Seleccionar codex.exe" Click="PickCodex_Click" HorizontalAlignment="Left"/>
+      <TextBlock Text="Muestreo de procesos: cada 5 s. Consumo IA: cada 5 min. El tiempo de inactividad se mide desde que esta app está abierta y vuelve a empezar tras suspender el equipo." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,20,0,15"/>
+      <Button Content="Desconectar Claude de esta app" Click="DisconnectClaude_Click" HorizontalAlignment="Left"/>
+      <Button Content="Salir de App Util Dev" Click="Exit_Click" HorizontalAlignment="Left" Foreground="#FFACAC" Margin="0,20,0,0"/>
+     </StackPanel></Border></Viewbox>
+    </TabItem>
+   </TabControl>
+   <TextBlock Grid.Row="3" x:Name="Footer" Text="● Activo en segundo plano" Foreground="{StaticResource Muted}" FontSize="10" Margin="0,16,0,0" TextWrapping="Wrap"/>
+  </Grid>
+ </Border>
+</Window>

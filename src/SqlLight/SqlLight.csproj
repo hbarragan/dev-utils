@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SqlLight</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup><Compile Remove="Program.cs;TrayPopup.cs;PopupTests.cs" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Npgsql" Version="8.0.8" />
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
+    <Content Include="www/**" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="tests/**" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="emulator/**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
