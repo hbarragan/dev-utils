@@ -9,11 +9,13 @@ namespace AppUtilDev;
 public partial class MainWindow
 {
  bool hasProcessSample;
+ string homeSqlIndicator="—";
  Task? homeSqlTask;
  internal void RenderHome()
  {
   if(HomeRuntimeSummary==null) return;
-  EquipmentSummary.Visibility=HomeTab.IsSelected?Visibility.Collapsed:Visibility.Visible;
+  EquipmentSummary.Visibility=HomeTab.IsSelected?Visibility.Hidden:Visibility.Visible;
+  HomeIndicators.Visibility=HomeTab.IsSelected?Visibility.Visible:Visibility.Hidden;
   if(hasProcessSample)
   {
    var runtime=rows.Where(r=>r.Family!="").ToList();
@@ -38,6 +40,22 @@ public partial class MainWindow
   var vpn=NetworkProbes.Text.Split('\n').Where(line=>line.StartsWith("VPN",StringComparison.Ordinal)).ToArray();
   HomeVpn.Text=settings.VpnHost.Length>0?$"Destino VPN · {settings.VpnHost}:{settings.VpnPort}":vpn.FirstOrDefault(line=>line.StartsWith("VPN adaptadores:") && !line.Contains("ninguno"))??"";
   HomeVpn.Visibility=HomeVpn.Text.Length>0?Visibility.Visible:Visibility.Collapsed;
+  RenderHomeIndicators();
+ }
+ void RenderHomeIndicators()
+ {
+  if(HomeIndicatorRuntime==null) return;
+  HomeIndicatorRuntime.Text=hasProcessSample?rows.Count(r=>r.Family!="").ToString():"—";
+  HomeIndicatorMemory.Text=hasProcessSample?$"{MemoryApps.Group(rows).Sum(a=>a.Bytes)/1073741824d:N1} GB":"—";
+  var quotas=HomeQuotas.ItemsSource?.Cast<UsageRow>().ToArray()??Array.Empty<UsageRow>();
+  HomeIndicatorAi.Text=quotas.Length>0?$"{quotas.Min(q=>q.Remaining):0.#}%":"—";
+  HomeIndicatorSql.Text=homeSqlIndicator;
+  HomeIndicatorSql.ToolTip=HomeSqlSummary.Text;
+  HomeIndicatorDisk.Text=disks.Length>0?$"{disks[0].FreePercent:N0}% libre":"—";
+  HomeIndicatorDisk.ToolTip=string.Join("\n",disks.Select(d=>d.Summary));
+  var sample=internet.Last;
+  HomeIndicatorInternet.Text=sample?.DownloadMbps is double down && sample.UploadMbps is double up?$"{down:N0}/{up:N0}":"—";
+  HomeIndicatorInternet.ToolTip=sample==null?"Prueba pendiente":HomeInternetSpeed.Text+" · descarga/subida";
  }
  internal Task RefreshHomeSqlAsync()
  {
@@ -49,11 +67,13 @@ public partial class MainWindow
   try
   {
    var summary=await SqlPortal.ReadSummaryAsync();
+   homeSqlIndicator=$"{summary.Running}/{summary.Count}";
    HomeSqlSummary.Text=summary.Count==0?"Sin entornos todavía":$"{summary.Count} {(summary.Count==1?"guardado":"guardados")} · {summary.Running} {(summary.Running==1?"activo":"activos")}";
    HomeSqlDetails.Text=summary.Count==0?"Crea tu primera base para desarrollo.":$"{summary.MemoryMb:N0} MB de motores{(summary.Partial?" · parcial":"")}\n"+summary.Details;
    if(summary.Busy) HomeSqlDetails.Text+="\nOperación en curso…";
   }
-  catch { HomeSqlSummary.Text="Gestor no disponible"; HomeSqlDetails.Text="Abre Bases de datos y pulsa Reintentar."; }
+  catch { homeSqlIndicator="—"; HomeSqlSummary.Text="Gestor no disponible"; HomeSqlDetails.Text="Abre Bases de datos y pulsa Reintentar."; }
+  finally { RenderHomeIndicators(); }
  }
  void HomeNavigate_Click(object sender,RoutedEventArgs e)
  {

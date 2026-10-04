@@ -67,6 +67,7 @@ internal static class PortalTests
    await window.RefreshHomeSqlAsync();
    Check("Home refleja los perfiles reales del gestor",window.HomeSqlSummary.Text=="1 guardado · 0 activos" && window.HomeSqlDetails.Text.Contains("portal_test") && window.HomeSqlDetails.Text.Contains(":55432"));
    await window.ScanAsync(renderHidden:true);
+   Check("Memoria muestra cuatro aplicaciones por página",window.MemoryList.ItemsSource.Cast<MemoryApp>().Count()==Math.Min(4,int.Parse(window.MemorySummary.Text.Split(' ')[0])));
    window.RefreshTraffic();await window.RefreshDisksAsync();
    Check("Home presenta GB acumulados y espacio de disco",window.HomeTraffic.Text.Contains("GB /") && window.HomeDisks.Text.Contains("% libre"));
    Check("Texto oscuro en el desplegable",window.IdleChoice.Foreground.ToString()=="#FF101B2A" && ((System.Windows.Controls.ComboBoxItem)window.IdleChoice.Items[0]).Foreground.ToString()=="#FF101B2A");
@@ -94,6 +95,10 @@ internal static class PortalTests
    bitmap.Render(content);
    var encoder=new System.Windows.Media.Imaging.PngBitmapEncoder(); encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
    using(var image=File.Create("artifacts/portal-home.png")) encoder.Save(image);
+   window.Tabs.SelectedItem=window.MemoryTab;window.UpdateLayout();
+   bitmap.Clear();bitmap.Render(content);encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+   using(var image=File.Create("artifacts/portal-memory.png")) encoder.Save(image);
+   window.Tabs.SelectedItem=window.HomeTab;
    window.SetPortalMode(true); window.PositionPortal(true);
    Check("Portal completo accesible desde el popup",window.ShowInTaskbar && !window.Topmost && window.Tabs.TabStripPlacement==System.Windows.Controls.Dock.Left);
    window.SetPortalMode(false); window.PositionPortal(false);
@@ -106,6 +111,18 @@ internal static class PortalTests
     bool full=window.Tabs.TabStripPlacement==position;
     window.SetPortalMode(false);
     Check($"Menú {item.Content}: cambio inmediato, ambas vistas y persistencia",full && window.Tabs.TabStripPlacement==position && Settings.Load().MenuPosition==item.Tag.ToString());
+    bool stable=true;
+    foreach(bool expanded in new[]{false,true})
+    {
+     window.SetPortalMode(expanded);window.Tabs.SelectedItem=window.HomeTab;window.UpdateLayout();
+     var anchor=window.Tabs.TranslatePoint(new System.Windows.Point(0,0),window);
+     foreach(var section in new[]{window.MemoryTab,window.UsageTab,window.RuntimeTab,window.NetworkTab,window.DiskTab,window.SettingsTab})
+     {
+      window.Tabs.SelectedItem=section;window.UpdateLayout();
+      stable &= (window.Tabs.TranslatePoint(new System.Windows.Point(0,0),window)-anchor).Length<0.1;
+     }
+    }
+    Check($"Menú {item.Content} conserva su posición al cambiar de sección",stable);
    }
    window.MenuPositionChoice.SelectedIndex=2;
    window.SetPortalMode(true); window.PositionPortal(true); window.UpdateLayout();
@@ -150,5 +167,7 @@ internal static class PortalTests
   }
  }
 }
+
+
 
 

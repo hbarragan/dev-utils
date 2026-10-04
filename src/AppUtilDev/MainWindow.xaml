@@ -45,7 +45,7 @@
  </Window.Resources>
  <Border Background="#101B2A" CornerRadius="16" BorderBrush="#344256" BorderThickness="1" Padding="20">
   <Grid>
-   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="88"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
    <DockPanel Margin="0,0,0,16">
     <Button Content="✕" Click="Hide_Click" DockPanel.Dock="Right" Background="#101B2A" ToolTip="Ocultar en la bandeja"/>
     <Button x:Name="PortalModeButton" Content="Abrir portal ↗" Click="PortalMode_Click" DockPanel.Dock="Right" VerticalAlignment="Top" FontSize="11" Padding="9,6"/>
@@ -53,6 +53,17 @@
    </DockPanel>
    <Border x:Name="EquipmentSummary" Grid.Row="1" Background="#182638" CornerRadius="9" Padding="12" Margin="0,0,0,14">
     <StackPanel><DockPanel><TextBlock x:Name="MemorySummary" FontWeight="SemiBold"/><TextBlock x:Name="ScanStatus" DockPanel.Dock="Right" Foreground="{StaticResource Muted}" FontSize="11" HorizontalAlignment="Right"/></DockPanel><DockPanel Margin="0,8,0,0"><TextBlock x:Name="GpuLabel" Text="GPU · consultando…" FontSize="11" Foreground="#7DD3FC"/><TextBlock x:Name="GpuMemory" Foreground="{StaticResource Muted}" FontSize="10" HorizontalAlignment="Right"/></DockPanel><ProgressBar x:Name="GpuBar" Height="3" Maximum="100" Background="#293548" Foreground="#7DD3FC" BorderThickness="0" Margin="0,5,0,0"/></StackPanel>
+   </Border>
+   <Border x:Name="HomeIndicators" Grid.Row="1" Background="#182638" CornerRadius="9" Padding="8,12" Margin="0,0,0,14">
+    <UniformGrid Columns="7">
+     <StackPanel Margin="3,0" ToolTip="Cuota de IA disponible más baja"><TextBlock Text="🤖 IA" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorAi" Text="—" FontSize="12" Foreground="#65DDB0" Margin="0,6,0,0"/></StackPanel>
+     <StackPanel Margin="3,0" ToolTip="Procesos Node.js y Java"><TextBlock Text="⚙ Procesos" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorRuntime" Text="—" FontSize="12" Foreground="#7DD3FC" Margin="0,6,0,0"/></StackPanel>
+     <StackPanel Margin="3,0" ToolTip="RAM de aplicaciones que superan 100 MB"><TextBlock Text="▥ RAM" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorMemory" Text="—" FontSize="12" Foreground="#65DDB0" Margin="0,6,0,0"/></StackPanel>
+     <StackPanel Margin="3,0"><TextBlock Text="🌐 Mb/s" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorInternet" Text="—" FontSize="12" Foreground="#7DD3FC" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel>
+     <StackPanel Margin="3,0" ToolTip="Bases SQL activas / guardadas"><TextBlock Text="🗄 SQL" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorSql" Text="—" FontSize="12" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel>
+     <StackPanel Margin="3,0"><TextBlock Text="💾 Disco" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorDisk" Text="—" FontSize="12" Foreground="#65DDB0" Margin="0,6,0,0"/></StackPanel>
+     <StackPanel Margin="3,0" ToolTip="Posición del menú"><TextBlock Text="🔧 Menú" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock Text="{Binding SelectedItem.Content, ElementName=MenuPositionChoice}" FontSize="11" Foreground="#7DD3FC" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel>
+    </UniformGrid>
    </Border>
    <TabControl x:Name="Tabs" Grid.Row="2" TabStripPlacement="Left" SelectionChanged="PortalTab_Changed" Background="Transparent" BorderThickness="0" Foreground="#E7EDF5">
     <TabControl.Resources>
@@ -168,7 +179,7 @@
     <TabItem x:Name="DiskTab" Header="💾" ToolTip="Discos" AutomationProperties.Name="Discos">
      <DockPanel Margin="6,0,0,0"><TextBlock Text="Espacio de tus discos" DockPanel.Dock="Top" FontSize="17" FontWeight="SemiBold" Margin="0,0,0,16"/>
       <DockPanel DockPanel.Dock="Bottom"><Button x:Name="DiskNext" Content="Siguiente ›" Click="DiskNext_Click" DockPanel.Dock="Right"/><Button x:Name="DiskPrev" Content="‹ Anterior" Click="DiskPrev_Click" DockPanel.Dock="Left"/><TextBlock x:Name="DiskPage" VerticalAlignment="Center" HorizontalAlignment="Center"/></DockPanel>
-      <ItemsControl x:Name="DiskList"><ItemsControl.ItemTemplate><DataTemplate><Border Background="#182638" CornerRadius="10" Padding="16" Margin="0,0,0,12"><StackPanel><TextBlock Text="{Binding Summary}" Foreground="#65DDB0" FontSize="14" TextWrapping="Wrap"/><ProgressBar Value="{Binding FreePercent}" Maximum="100" Foreground="#65DDB0" Background="#293548" BorderThickness="0" Height="5" Margin="0,12,0,0"/></StackPanel></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+      <ItemsControl x:Name="DiskList"><ItemsControl.ItemTemplate><DataTemplate><Border Background="#182638" CornerRadius="10" Padding="16" Margin="0,0,0,12"><StackPanel><TextBlock Text="{Binding Summary}" Foreground="#65DDB0" FontSize="14" TextWrapping="Wrap"/><ProgressBar Value="{Binding FreePercent, Mode=OneWay}" Maximum="100" Foreground="#65DDB0" Background="#293548" BorderThickness="0" Height="5" Margin="0,12,0,0"/></StackPanel></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
      </DockPanel>
     </TabItem>
     <TabItem x:Name="SettingsTab" Header="🔧" ToolTip="Ajustes" AutomationProperties.Name="Ajustes">
@@ -192,3 +203,4 @@
   </Grid>
  </Border>
 </Window>
+

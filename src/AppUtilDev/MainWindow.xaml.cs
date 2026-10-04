@@ -76,7 +76,7 @@ public partial class MainWindow : Window
  {
   var large=MemoryApps.Group(rows);
   MemorySummary.Text=$"{large.Count} apps > 100 MB · {large.Sum(x=>x.Bytes)/1073741824d:N1} GB";
-  int size=portalMode?4:2;int pages=Math.Max(1,(large.Count+size-1)/size); page=Math.Clamp(page,0,pages-1);
+  int size=4;int pages=Math.Max(1,(large.Count+size-1)/size); page=Math.Clamp(page,0,pages-1);
   MemoryList.ItemsSource=MemoryApps.Page(large,page,size).Select(g=>expandedMemoryApps.TryGetValue(g.Key,out bool expanded)?g with {Expanded=expanded}:g).ToList();
   PageLabel.Text=$"{page+1} / {pages}"; PrevButton.IsEnabled=page>0; NextButton.IsEnabled=page<pages-1;
   MemoryEmpty.Text=large.Count==0?"No hay aplicaciones por encima del umbral.":"";

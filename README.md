@@ -2,7 +2,7 @@
 
 Portal de utilidades para desarrolladores en Windows: monitorización de procesos y memoria, consumo de IA, pruebas de Internet, espacio de discos y gestión de bases de datos locales en una única ventana y un único icono en la bandeja. Interfaz azul oscuro con tarjetas y acentos verdes.
 
-El clic en la bandeja muestra la vista rápida en la parte inferior derecha, sin barra de título. El menú utiliza iconos con el mismo fondo y tooltips: Home, IA, procesos, memoria, Internet, bases de datos, discos y ajustes. Al hacer clic fuera, se oculta. **Abrir portal ↗** amplía esa misma interfaz; **Vista rápida ↘** vuelve al popup. La Home cabe sin scroll. Procesos, memoria, discos, panel SQL y conexiones disponen de páginas para recorrer listas largas.
+El clic en la bandeja muestra la vista rápida en la parte inferior derecha, sin barra de título. El menú utiliza iconos con el mismo fondo y tooltips: Home, IA, procesos, memoria, Internet, bases de datos, discos y ajustes. Al hacer clic fuera, se oculta. **Abrir portal ↗** amplía esa misma interfaz; **Vista rápida ↘** vuelve al popup. La Home cabe sin scroll y muestra una franja superior de indicadores de IA, procesos, RAM, Internet, bases de datos, discos y posición del menú. Esta franja conserva la altura de la cabecera de los demás apartados para que el menú no se desplace al navegar. Memoria muestra cuatro aplicaciones por página en ambas vistas. Procesos, memoria, discos, panel SQL y conexiones disponen de páginas para recorrer listas largas.
 
 ## Capturas
 
@@ -84,6 +84,7 @@ Los resultados y capturas quedan en `artifacts` y se excluyen del control de ver
 ## Código
 
 `src/AppUtilDev` contiene el portal WPF y la monitorización. `src/SqlLight` es el módulo del gestor de datos, enlazado como biblioteca. Su servidor se ejecuta dentro del portal en modo portable, sin un segundo icono de bandeja ni una segunda aplicación SQL. El panel escucha únicamente en `127.0.0.1`, con token por ejecución y controles de origen.
+
 
 
 

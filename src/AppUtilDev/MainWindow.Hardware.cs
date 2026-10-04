@@ -22,6 +22,7 @@ public partial class MainWindow
   NetworkSpeedStatus.Text=sample.Error??$"Última prueba {sample.At:HH:mm:ss} · cada minuto";
   HomeInternetSpeed.Text=$"↓ {Format(sample.DownloadMbps)} / ↑ {Format(sample.UploadMbps)} Mb/s";
   HomeInternetSpeed.ToolTip=sample.Error??$"Prueba ligera de transferencia · {sample.At:HH:mm:ss}; no mide la capacidad máxima de la línea.";
+  RenderHomeIndicators();
   try {System.IO.Directory.CreateDirectory(Settings.DataDir);System.IO.File.WriteAllText(System.IO.Path.Combine(Settings.DataDir,"internet-last.json"),System.Text.Json.JsonSerializer.Serialize(sample));} catch { }
  }
  internal void RefreshTraffic()
@@ -41,6 +42,7 @@ public partial class MainWindow
   DiskPrev.IsEnabled=diskPage>0;DiskNext.IsEnabled=diskPage<pages-1;
   HomeDisks.Text=disks.Length==0?"Sin discos disponibles":string.Join("\n",disks.Take(2).Select(d=>d.Summary));
   HomeDisks.ToolTip=string.Join("\n",disks.Select(d=>d.Summary));
+  RenderHomeIndicators();
  }
  void DiskPrev_Click(object sender,RoutedEventArgs e) {diskPage--;RenderDisks();}
  void DiskNext_Click(object sender,RoutedEventArgs e) {diskPage++;RenderDisks();}
