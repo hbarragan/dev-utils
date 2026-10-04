@@ -36,7 +36,6 @@ public record RuntimeGroup(string Name, string Summary, List<ProcessRow> Process
 }
 public sealed class Settings
 {
- public string MenuPosition { get; set; } = "Left";
  internal static string? DataDirOverride;
  public int IdleMinutes { get; set; } = 4;
  public string CodexPath { get; set; } = "";

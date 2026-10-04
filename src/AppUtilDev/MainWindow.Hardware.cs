@@ -37,10 +37,10 @@ public partial class MainWindow
  }
  void RenderDisks()
  {
-  int pages=Math.Max(1,(disks.Length+2)/3);diskPage=Math.Clamp(diskPage,0,pages-1);
-  DiskList.ItemsSource=disks.Skip(diskPage*3).Take(3).ToArray();DiskPage.Text=$"{diskPage+1} / {pages}";
+  int pages=Math.Max(1,(disks.Length+3)/4);diskPage=Math.Clamp(diskPage,0,pages-1);
+  DiskList.ItemsSource=disks.Skip(diskPage*4).Take(4).ToArray();DiskPage.Text=$"{diskPage+1} / {pages}";
   DiskPrev.IsEnabled=diskPage>0;DiskNext.IsEnabled=diskPage<pages-1;
-  HomeDisks.Text=disks.Length==0?"Sin discos disponibles":string.Join("\n",disks.Take(2).Select(d=>d.Summary));
+  HomeDisks.Text=disks.Length==0?"Sin discos disponibles":$"{disks.Sum(d=>(double)d.Free)/1_000_000_000:N0} / {disks.Sum(d=>(double)d.Total)/1_000_000_000:N0} GB\n{disks.Sum(d=>(double)d.Free)/disks.Sum(d=>(double)d.Total)*100:N0}% libre · {disks.Length} discos";
   HomeDisks.ToolTip=string.Join("\n",disks.Select(d=>d.Summary));
   RenderHomeIndicators();
  }

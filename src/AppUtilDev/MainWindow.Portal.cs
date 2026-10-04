@@ -10,16 +10,6 @@ namespace AppUtilDev;
 public partial class MainWindow
 {
  bool portalMode;
- void ApplyMenuPosition()
- {
-  Tabs.TabStripPlacement=Enum.TryParse<Dock>(settings.MenuPosition,out var position) && Enum.IsDefined(position)?position:Dock.Left;
- }
- void MenuPosition_Changed(object sender,SelectionChangedEventArgs e)
- {
-  if(initializing || MenuPositionChoice.SelectedItem is not ComboBoxItem item) return;
-  settings.MenuPosition=item.Tag.ToString()!;
-  ApplyMenuPosition(); settings.Save();
- }
  internal void SetPortalMode(bool expanded)
  {
   portalMode=expanded;
@@ -27,7 +17,7 @@ public partial class MainWindow
   Height=expanded?840:810;
   Topmost=!expanded;
   ShowInTaskbar=expanded;
-  ApplyMenuPosition();
+
   PortalModeButton.Content=expanded?"Vista rápida ↘":"Abrir portal ↗";
  }
  internal void PositionPortal(bool expanded)
@@ -99,3 +89,4 @@ public partial class MainWindow
   catch(Exception e) { SqlStatus.Text="No se pudo iniciar el gestor"; SqlStatus.ToolTip=e.Message; SqlRetryButton.Visibility=Visibility.Visible; }
  }
 }
+

@@ -71,7 +71,7 @@ internal static class PortalTests
    window.RefreshTraffic();await window.RefreshDisksAsync();
    Check("Home presenta GB acumulados y espacio de disco",window.HomeTraffic.Text.Contains("GB /") && window.HomeDisks.Text.Contains("% libre"));
    Check("Texto oscuro en el desplegable",window.IdleChoice.Foreground.ToString()=="#FF101B2A" && ((System.Windows.Controls.ComboBoxItem)window.IdleChoice.Items[0]).Foreground.ToString()=="#FF101B2A");
-   foreach(var combo in new[]{window.RuntimeFilter,window.IdleChoice,window.MenuPositionChoice})
+   foreach(var combo in new[]{window.RuntimeFilter,window.IdleChoice})
    {
     window.Tabs.SelectedItem=combo==window.RuntimeFilter?window.RuntimeTab:window.SettingsTab;
     await Task.Delay(80);
@@ -89,7 +89,7 @@ internal static class PortalTests
    var right=transform.Transform(new System.Windows.Point(screen.WorkingArea.Right,screen.WorkingArea.Bottom));
    Check("Popup sin marco y anclado a la derecha",window.WindowStyle==System.Windows.WindowStyle.None && !window.ShowInTaskbar && window.Topmost && window.Width<=570 && Math.Abs(window.Left+window.Width+12-right.X)<1 && Math.Abs(window.Top+window.Height+12-right.Y)<1);
    window.UpdateLayout();
-   Check("Menú lateral por iconos",window.Tabs.TabStripPlacement==System.Windows.Controls.Dock.Left && window.Tabs.Items.Cast<System.Windows.Controls.TabItem>().All(t=>t.Header.ToString()!.Length<=2 && t.ToolTip!=null));
+   Check("Cabecera navegable sin menú lateral",window.HeaderNavigation.Children.Count==8 && window.Tabs.Template.FindName("PART_SelectedContentHost",window.Tabs) is System.Windows.Controls.ContentPresenter);
    var content=(System.Windows.FrameworkElement)window.Content;
    var bitmap=new System.Windows.Media.Imaging.RenderTargetBitmap((int)window.ActualWidth,(int)window.ActualHeight,96,96,System.Windows.Media.PixelFormats.Pbgra32);
    bitmap.Render(content);
@@ -98,33 +98,27 @@ internal static class PortalTests
    window.Tabs.SelectedItem=window.MemoryTab;window.UpdateLayout();
    bitmap.Clear();bitmap.Render(content);encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
    using(var image=File.Create("artifacts/portal-memory.png")) encoder.Save(image);
+   window.Tabs.SelectedItem=window.RuntimeTab;window.UpdateLayout();
+   bitmap.Clear();bitmap.Render(content);encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+   using(var image=File.Create("artifacts/portal-runtimes.png"))encoder.Save(image);
    window.Tabs.SelectedItem=window.HomeTab;
    window.SetPortalMode(true); window.PositionPortal(true);
    Check("Portal completo accesible desde el popup",window.ShowInTaskbar && !window.Topmost && window.Tabs.TabStripPlacement==System.Windows.Controls.Dock.Left);
    window.SetPortalMode(false); window.PositionPortal(false);
    Check("Retorno a vista rápida con menú lateral",!window.ShowInTaskbar && window.Topmost && window.Tabs.TabStripPlacement==System.Windows.Controls.Dock.Left && window.Tabs.Items.Count==8);
-   foreach(System.Windows.Controls.ComboBoxItem item in window.MenuPositionChoice.Items)
+   bool stable=true;
+   foreach(bool expanded in new[]{false,true})
    {
-    window.MenuPositionChoice.SelectedItem=item;
-    var position=Enum.Parse<System.Windows.Controls.Dock>(item.Tag.ToString()!);
-    window.SetPortalMode(true);
-    bool full=window.Tabs.TabStripPlacement==position;
-    window.SetPortalMode(false);
-    Check($"Menú {item.Content}: cambio inmediato, ambas vistas y persistencia",full && window.Tabs.TabStripPlacement==position && Settings.Load().MenuPosition==item.Tag.ToString());
-    bool stable=true;
-    foreach(bool expanded in new[]{false,true})
+    window.SetPortalMode(expanded);window.Tabs.SelectedItem=window.HomeTab;window.UpdateLayout();
+    var anchor=window.HomeIndicators.TranslatePoint(new System.Windows.Point(0,0),window);
+    foreach(var section in new[]{window.MemoryTab,window.UsageTab,window.RuntimeTab,window.NetworkTab,window.DiskTab,window.SettingsTab})
     {
-     window.SetPortalMode(expanded);window.Tabs.SelectedItem=window.HomeTab;window.UpdateLayout();
-     var anchor=window.Tabs.TranslatePoint(new System.Windows.Point(0,0),window);
-     foreach(var section in new[]{window.MemoryTab,window.UsageTab,window.RuntimeTab,window.NetworkTab,window.DiskTab,window.SettingsTab})
-     {
-      window.Tabs.SelectedItem=section;window.UpdateLayout();
-      stable &= (window.Tabs.TranslatePoint(new System.Windows.Point(0,0),window)-anchor).Length<0.1;
-     }
+     window.Tabs.SelectedItem=section;window.UpdateLayout();
+     stable &= window.HomeIndicators.Visibility==System.Windows.Visibility.Visible && (window.HomeIndicators.TranslatePoint(new System.Windows.Point(0,0),window)-anchor).Length<0.1 && window.EquipmentSummary.Visibility==System.Windows.Visibility.Collapsed;
     }
-    Check($"Menú {item.Content} conserva su posición al cambiar de sección",stable);
    }
-   window.MenuPositionChoice.SelectedIndex=2;
+   Check("La cabecera de indicadores permanece en todas las secciones y vistas",stable);
+   Check("Procesos y discos utilizan páginas de cuatro",window.RuntimeList.ItemsSource.Cast<ProcessRow>().Count()<=4 && window.DiskList.Items.Count<=4);
    window.SetPortalMode(true); window.PositionPortal(true); window.UpdateLayout();
    window.HomeSqlButton.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
    Check("Acceso directo del Home abre Bases de datos",window.Tabs.SelectedItem==window.DatabaseTab);
@@ -142,20 +136,43 @@ internal static class PortalTests
    Check("Motor automático sin descargas manuales",await web.ExecuteScriptAsync("Boolean(document.getElementById('create') && document.querySelectorAll('#engine option').length===3 && document.querySelectorAll('[data-install]').length===0 && document.getElementById('sql-guide'))")=="true");
    await web.ExecuteScriptAsync("document.getElementById('sql-guide').click()");
    Check("Explicación distingue RAM y datos persistentes",await web.ExecuteScriptAsync("Boolean(document.getElementById('sql').open && document.getElementById('sql').innerText.includes('RAM') && document.getElementById('sql').innerText.includes('disco'))")=="true");
-   await web.ExecuteScriptAsync("document.getElementById('sql').close();document.querySelector('#profiles details').open=true");
-   await web.ExecuteScriptAsync("render()");
-   Check("Opciones plegadas conservan su estado al actualizar",await web.ExecuteScriptAsync("Boolean(document.querySelector('#profiles details').open)")=="true");
+   await web.ExecuteScriptAsync("document.getElementById('sql').close();document.querySelector('[data-action=options]').click();render()");
+   Check("Opciones accesibles en diálogo y conservadas al actualizar",await web.ExecuteScriptAsync("document.getElementById('options').open")=="true");
+   await web.ExecuteScriptAsync("document.getElementById('options').close()");
    await web.ExecuteScriptAsync("metricPending=true;metrics[state.profiles[0].id]={telemetry:{sessions:Array.from({length:11},(_,i)=>({pid:i+1,user:'test',application:'dev',state:'idle',client:'127.0.0.1'}))}};showSessions(state.profiles[0]);");
-   Check("Sesiones accesibles por páginas sin scroll",await web.ExecuteScriptAsync("Boolean(document.querySelectorAll('#sessions-content tbody tr').length===5 && document.getElementById('sessions-page').textContent==='1 / 3')")=="true");
+   Check("Sesiones accesibles por páginas sin scroll",await web.ExecuteScriptAsync("Boolean(document.querySelectorAll('#sessions-content tbody tr').length===4 && document.getElementById('sessions-page').textContent==='1 / 3')")=="true");
    await web.ExecuteScriptAsync("document.getElementById('sessions-next').click()");
    Check("Página siguiente de sesiones disponible",await web.ExecuteScriptAsync("document.getElementById('sessions-page').textContent==='2 / 3'")=="true");
    await web.ExecuteScriptAsync("document.getElementById('sessions').close();metricPending=false;");
    Check("Panel SQL sin barras de scroll",await web.ExecuteScriptAsync("Boolean(getComputedStyle(document.body).overflow==='hidden' && document.getElementById('sql-page-next'))")=="true");
-   await web.ExecuteScriptAsync("document.querySelector('#profiles details').open=false");
    using(var image=File.Create("artifacts/portal-sql.png")) await web.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,image);
    await web.ExecuteScriptAsync("document.getElementById('database').value='from_portal';document.getElementById('username').value='devuser';document.getElementById('password').value='test-local';document.getElementById('port').value='55433';document.getElementById('create').requestSubmit();");
    for(int i=0;i<100 && new Store(root).Snapshot().Length<2;i++) await Task.Delay(100);
    Check("Creación completa desde formulario embebido",new Store(root).Snapshot().Length==2);
+   using var pageClient=new HttpClient{BaseAddress=new Uri(await SqlPortal.StartAsync())};
+   var pageHtml=await pageClient.GetStringAsync("");
+   pageClient.DefaultRequestHeaders.Add("X-SqlLight-Token",Regex.Match(pageHtml,"const token='([A-F0-9]+)'").Groups[1].Value);
+   for(int i=0;i<4;i++)
+   {
+    var extra=JsonSerializer.Serialize(new{engine="postgres",database=$"page_test_{i}",username="devuser",password="test-local",port=55434+i});
+    (await pageClient.PostAsync("api/profiles",new StringContent(extra,Encoding.UTF8,"application/json"))).EnsureSuccessStatusCode();
+   }
+   await web.ExecuteScriptAsync("refresh();viewPage=0;");
+   for(int i=0;i<100 && await web.ExecuteScriptAsync("state.profiles.length===6")!="true";i++)await Task.Delay(100);
+   await web.ExecuteScriptAsync("render()");
+   Check("SQL pagina cuatro bases por página",await web.ExecuteScriptAsync("document.querySelectorAll('#profiles .profile').length===4 && document.getElementById('sql-page-label').textContent==='1 / 2'")=="true");
+   window.SetPortalMode(false);window.PositionPortal(false);window.UpdateLayout();await Task.Delay(150);
+   await web.ExecuteScriptAsync("document.getElementById('sql-page-next').click()");
+   Check("Segunda página SQL mantiene acciones visibles en vista rápida",await web.ExecuteScriptAsync("document.querySelectorAll('#profiles .profile').length===2 && [...document.querySelectorAll('#profiles [data-action=delete]')].every(b=>{const r=b.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&r.right<=innerWidth&&!b.disabled})")=="true");
+   await web.ExecuteScriptAsync("document.querySelector('#profiles [data-action=delete]').click()");
+   Check("Eliminar accesible desde una página SQL",await web.ExecuteScriptAsync("document.getElementById('delete').open")=="true");
+   await web.ExecuteScriptAsync("document.getElementById('delete-name').value=deleting.database;document.getElementById('confirm-delete').click()");
+   for(int i=0;i<100 && new Store(root).Snapshot().Length!=5;i++)await Task.Delay(100);
+   Check("Borrado confirmado desde la segunda página elimina solo el entorno de prueba",new Store(root).Snapshot().Length==5 && new Store(root).Snapshot().Any(p=>p.Database=="portal_test") && new Store(root).Snapshot().Any(p=>p.Database=="from_portal"));
+   await web.ExecuteScriptAsync("viewPage=0;render()");await Task.Delay(100);
+   Check("Cuatro tarjetas SQL conservan Eliminar visible sin scroll",await web.ExecuteScriptAsync("document.querySelectorAll('#profiles .profile').length===4 && [...document.querySelectorAll('#profiles [data-action=delete]')].every(b=>{const r=b.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&r.right<=innerWidth})")=="true");
+   await web.ExecuteScriptAsync("document.getElementById('toast').style.display='none'");
+   using(var image=File.Create("artifacts/portal-sql-four.png"))await web.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,image);
   }
   catch(Exception error) {passed=false;checks.Add(new {name="Error de integración",passed=false,reason=error.ToString()});}
   finally
@@ -167,6 +184,7 @@ internal static class PortalTests
   }
  }
 }
+
 
 
 

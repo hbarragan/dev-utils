@@ -28,8 +28,8 @@ public partial class MainWindow : Window
  public MainWindow()
  {
   InitializeComponent();
-  ApplyMenuPosition();
-  foreach(ComboBoxItem item in MenuPositionChoice.Items) if(item.Tag.ToString()==Tabs.TabStripPlacement.ToString()) MenuPositionChoice.SelectedItem=item;
+  Tabs.SelectedItem=HomeTab;
+  RenderQuotaPages();RenderAdapterPage();
   AutoStart.IsChecked=StartupEnabled();
   foreach(ComboBoxItem item in IdleChoice.Items) if(item.Content.ToString()==settings.IdleMinutes.ToString()) IdleChoice.SelectedItem=item;
   if(IdleChoice.SelectedIndex<0) IdleChoice.SelectedIndex=1;
@@ -81,7 +81,7 @@ public partial class MainWindow : Window
   PageLabel.Text=$"{page+1} / {pages}"; PrevButton.IsEnabled=page>0; NextButton.IsEnabled=page<pages-1;
   MemoryEmpty.Text=large.Count==0?"No hay aplicaciones por encima del umbral.":"";
   var runtime=rows.Where(r=>r.Family!="").Where(r=>RuntimeFilter.SelectedIndex switch {1=>r.PortLinks.Length>0,2=>r.Family=="Node.js",3=>r.Family=="Java / JDK",4=>r.Protected,_=>true}).OrderByDescending(r=>r.PortLinks.Length>0).ThenByDescending(r=>r.Bytes).ToList();
-  int runtimeSize=portalMode?5:3;int runtimePages=Math.Max(1,(runtime.Count+runtimeSize-1)/runtimeSize);runtimePage=Math.Clamp(runtimePage,0,runtimePages-1);
+  int runtimeSize=4;int runtimePages=Math.Max(1,(runtime.Count+runtimeSize-1)/runtimeSize);runtimePage=Math.Clamp(runtimePage,0,runtimePages-1);
   RuntimeList.ItemsSource=runtime.Skip(runtimePage*runtimeSize).Take(runtimeSize).ToArray();RuntimePage.Text=$"{runtimePage+1} / {runtimePages} · {runtime.Count} procesos";
   RuntimePrev.IsEnabled=runtimePage>0;RuntimeNext.IsEnabled=runtimePage<runtimePages-1;
   RuntimeEmpty.Text=rows.Any(x=>x.Family!="")?"":"No se están ejecutando procesos Node.js o Java.";
@@ -160,7 +160,7 @@ public partial class MainWindow : Window
   {
    var view=await Task.Run(()=>network.SampleAsync(host,port));
    NetworkDiagnosis.Text=view.Diagnosis; NetworkProbes.Text=view.Probes; NetworkTraffic.Text=view.Traffic;
-   NetworkAdapters.ItemsSource=view.Adapters; NetworkChanges.Text=view.Changes.Length>0?view.Changes:"Sin cambios desde el inicio.";
+   allAdapters=view.Adapters.ToArray(); RenderAdapterPage(); NetworkChanges.Text=view.Changes.Length>0?view.Changes:"Sin cambios desde el inicio.";
    NetworkTime.Text="Actualizado "+DateTime.Now.ToString("HH:mm:ss");
   }
   catch(Exception e) { NetworkDiagnosis.Text="No se pudo completar la muestra de red."; NetworkTime.Text=e.Message; }
@@ -182,8 +182,8 @@ public partial class MainWindow : Window
  public async Task RefreshUsageAsync()
  {
   if(readingUsage) return; readingUsage=true; CodexStatus.Text="Consultando límites…";
-  try { CodexQuotas.ItemsSource=await CodexUsage.ReadAsync(settings.CodexPath); CodexStatus.Text="Cuenta de Codex · leído "+DateTime.Now.ToString("HH:mm"); }
-  catch(Exception e) { CodexQuotas.ItemsSource=null; CodexStatus.Text=e is OperationCanceledException?"Tiempo de espera agotado. Se reintentará.":e.Message; }
+  try { allCodex=(await CodexUsage.ReadAsync(settings.CodexPath)).ToArray(); RenderQuotaPages(); CodexStatus.Text="Cuenta de Codex · leído "+DateTime.Now.ToString("HH:mm"); }
+  catch(Exception e) { allCodex=Array.Empty<UsageRow>(); RenderQuotaPages(); CodexStatus.Text=e is OperationCanceledException?"Tiempo de espera agotado. Se reintentará.":e.Message; }
   finally { readingUsage=false; RenderHome(); }
  }
  public void ShowPopup()
@@ -227,7 +227,7 @@ public partial class MainWindow : Window
   {
    if(claude==null)
    {
-    claude=new(); claude.UsageChanged+=(usage,status)=> { ClaudeQuotas.ItemsSource=usage; ClaudeStatus.Text=status; RenderHome(); };
+    claude=new(); claude.UsageChanged+=(usage,status)=> { allClaude=usage.ToArray(); RenderQuotaPages(); ClaudeStatus.Text=status; RenderHome(); };
     var connection=claude;
     connection.IsVisibleChanged+=(_,_)=>
     {
@@ -291,7 +291,7 @@ public partial class MainWindow : Window
     claude.Show(); await claude.InitializeAsync();
    }
    await claude.DisconnectAsync();
-   ClaudeQuotas.ItemsSource=null; ClaudeStatus.Text="Desconectado.";
+   allClaude=Array.Empty<UsageRow>(); RenderQuotaPages(); ClaudeStatus.Text="Desconectado.";
   }
   catch { ClaudeStatus.Text="No se pudo borrar la sesión local de Claude. Vuelve a intentarlo."; }
   finally { claude?.DisposeBrowser(); claude?.Close(); claude=null; }
@@ -299,3 +299,6 @@ public partial class MainWindow : Window
  public async void ExitApp() { if(exiting) return; exiting=true; try { await SqlPortal.StopAsync(); internet.Dispose(); timer.Stop(); SqlBrowser.Dispose(); claude?.DisposeBrowser(); ((App)Application.Current).ExitApp(); } catch(Exception e) { exiting=false; MessageBox.Show(this,e.Message,"No se pudo salir"); } }
  void Exit_Click(object sender,RoutedEventArgs e)=>ExitApp();
 }
+
+
+

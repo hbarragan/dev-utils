@@ -14,8 +14,10 @@ public partial class MainWindow
  internal void RenderHome()
  {
   if(HomeRuntimeSummary==null) return;
-  EquipmentSummary.Visibility=HomeTab.IsSelected?Visibility.Hidden:Visibility.Visible;
-  HomeIndicators.Visibility=HomeTab.IsSelected?Visibility.Visible:Visibility.Hidden;
+  EquipmentSummary.Visibility=Visibility.Collapsed;
+  HomeIndicators.Visibility=Visibility.Visible;
+  foreach(Button button in HeaderNavigation.Children)
+   button.Background=new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(SectionForTag(button.Tag as string)==Tabs.SelectedItem?"#34506A":"#243247"));
   if(hasProcessSample)
   {
    var runtime=rows.Where(r=>r.Family!="").ToList();
@@ -31,8 +33,8 @@ public partial class MainWindow
    HomeMemoryTop.Text=string.Join("\n",apps.Take(2).Select(a=>$"{a.Name} · {a.Memory}"));
    HomeUpdated.Text=DateTime.Now.ToString("HH:mm:ss");
   }
-  var codex=CodexQuotas.ItemsSource?.Cast<UsageRow>().Take(2).Select(q=>q with {Name="Codex · "+q.Name}) ?? Enumerable.Empty<UsageRow>();
-  var claudeUsage=ClaudeQuotas.ItemsSource?.Cast<UsageRow>().Take(2).Select(q=>q with {Name="Claude · "+q.Name}) ?? Enumerable.Empty<UsageRow>();
+  var codex=allCodex.Select(q=>q with {Name="Codex · "+q.Name}) ?? Enumerable.Empty<UsageRow>();
+  var claudeUsage=allClaude.Select(q=>q with {Name="Claude · "+q.Name}) ?? Enumerable.Empty<UsageRow>();
   var quotas=codex.OrderBy(q=>q.Remaining).Take(1).Concat(claudeUsage.OrderBy(q=>q.Remaining).Take(1)).ToArray(); HomeQuotas.ItemsSource=quotas;
   HomeAiHint.Text=quotas.Any(q=>q.Remaining<=10)?"Cuota baja · 10% o menos":quotas.Length>0?"":"Conecta tus cuentas en Consumo IA.";
   HomeAiHint.Visibility=HomeAiHint.Text.Length>0?Visibility.Visible:Visibility.Collapsed;
@@ -51,7 +53,7 @@ public partial class MainWindow
   HomeIndicatorAi.Text=quotas.Length>0?$"{quotas.Min(q=>q.Remaining):0.#}%":"—";
   HomeIndicatorSql.Text=homeSqlIndicator;
   HomeIndicatorSql.ToolTip=HomeSqlSummary.Text;
-  HomeIndicatorDisk.Text=disks.Length>0?$"{disks[0].FreePercent:N0}% libre":"—";
+  HomeIndicatorDisk.Text=disks.Length>0?$"{disks.Sum(d=>(double)d.Free)/disks.Sum(d=>(double)d.Total)*100:N0}% libre":"—";
   HomeIndicatorDisk.ToolTip=string.Join("\n",disks.Select(d=>d.Summary));
   var sample=internet.Last;
   HomeIndicatorInternet.Text=sample?.DownloadMbps is double down && sample.UploadMbps is double up?$"{down:N0}/{up:N0}":"—";
@@ -75,11 +77,12 @@ public partial class MainWindow
   catch { homeSqlIndicator="—"; HomeSqlSummary.Text="Gestor no disponible"; HomeSqlDetails.Text="Abre Bases de datos y pulsa Reintentar."; }
   finally { RenderHomeIndicators(); }
  }
- void HomeNavigate_Click(object sender,RoutedEventArgs e)
- {
-  Tabs.SelectedItem=(((Button)sender).Tag as string) switch
+ TabItem SectionForTag(string? tag)=>tag switch
   {
    "runtimes"=>RuntimeTab,"usage"=>UsageTab,"memory"=>MemoryTab,"network"=>NetworkTab,"sql"=>DatabaseTab,"disks"=>DiskTab,"settings"=>SettingsTab,_=>HomeTab
   };
- }
+ void HomeNavigate_Click(object sender,RoutedEventArgs e)=>Tabs.SelectedItem=SectionForTag(((Button)sender).Tag as string);
 }
+
+
+

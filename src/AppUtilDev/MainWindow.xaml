@@ -54,19 +54,16 @@
    <Border x:Name="EquipmentSummary" Grid.Row="1" Background="#182638" CornerRadius="9" Padding="12" Margin="0,0,0,14">
     <StackPanel><DockPanel><TextBlock x:Name="MemorySummary" FontWeight="SemiBold"/><TextBlock x:Name="ScanStatus" DockPanel.Dock="Right" Foreground="{StaticResource Muted}" FontSize="11" HorizontalAlignment="Right"/></DockPanel><DockPanel Margin="0,8,0,0"><TextBlock x:Name="GpuLabel" Text="GPU · consultando…" FontSize="11" Foreground="#7DD3FC"/><TextBlock x:Name="GpuMemory" Foreground="{StaticResource Muted}" FontSize="10" HorizontalAlignment="Right"/></DockPanel><ProgressBar x:Name="GpuBar" Height="3" Maximum="100" Background="#293548" Foreground="#7DD3FC" BorderThickness="0" Margin="0,5,0,0"/></StackPanel>
    </Border>
-   <Border x:Name="HomeIndicators" Grid.Row="1" Background="#182638" CornerRadius="9" Padding="8,12" Margin="0,0,0,14">
-    <UniformGrid Columns="7">
-     <StackPanel Margin="3,0" ToolTip="Cuota de IA disponible más baja"><TextBlock Text="🤖 IA" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorAi" Text="—" FontSize="12" Foreground="#65DDB0" Margin="0,6,0,0"/></StackPanel>
-     <StackPanel Margin="3,0" ToolTip="Procesos Node.js y Java"><TextBlock Text="⚙ Procesos" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorRuntime" Text="—" FontSize="12" Foreground="#7DD3FC" Margin="0,6,0,0"/></StackPanel>
-     <StackPanel Margin="3,0" ToolTip="RAM de aplicaciones que superan 100 MB"><TextBlock Text="▥ RAM" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorMemory" Text="—" FontSize="12" Foreground="#65DDB0" Margin="0,6,0,0"/></StackPanel>
-     <StackPanel Margin="3,0"><TextBlock Text="🌐 Mb/s" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorInternet" Text="—" FontSize="12" Foreground="#7DD3FC" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel>
-     <StackPanel Margin="3,0" ToolTip="Bases SQL activas / guardadas"><TextBlock Text="🗄 SQL" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorSql" Text="—" FontSize="12" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel>
-     <StackPanel Margin="3,0"><TextBlock Text="💾 Disco" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock x:Name="HomeIndicatorDisk" Text="—" FontSize="12" Foreground="#65DDB0" Margin="0,6,0,0"/></StackPanel>
-     <StackPanel Margin="3,0" ToolTip="Posición del menú"><TextBlock Text="🔧 Menú" FontSize="10" Foreground="{StaticResource Muted}"/><TextBlock Text="{Binding SelectedItem.Content, ElementName=MenuPositionChoice}" FontSize="11" Foreground="#7DD3FC" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel>
-    </UniformGrid>
-   </Border>
+   <Border x:Name="HomeIndicators" Grid.Row="1" Background="#182638" CornerRadius="9" Padding="4,6" Margin="0,0,0,14"><UniformGrid x:Name="HeaderNavigation" Columns="8"><Button Tag="home" Click="HomeNavigate_Click" Padding="3,7" Margin="1" ToolTip="⌂ Home"><StackPanel><TextBlock Text="⌂ Home" FontSize="9" Foreground="#CBD5E1"/><TextBlock  Text="Inicio" FontSize="11" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></Button>
+<Button Tag="usage" Click="HomeNavigate_Click" Padding="3,7" Margin="1" ToolTip="🤖 IA"><StackPanel><TextBlock Text="🤖 IA" FontSize="9" Foreground="#CBD5E1"/><TextBlock x:Name="HomeIndicatorAi" Text="—" FontSize="11" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></Button>
+<Button Tag="runtimes" Click="HomeNavigate_Click" Padding="3,7" Margin="1" ToolTip="⚙ Procesos"><StackPanel><TextBlock Text="⚙ Procesos" FontSize="9" Foreground="#CBD5E1"/><TextBlock x:Name="HomeIndicatorRuntime" Text="—" FontSize="11" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></Button>
+<Button Tag="memory" Click="HomeNavigate_Click" Padding="3,7" Margin="1" ToolTip="▥ RAM"><StackPanel><TextBlock Text="▥ RAM" FontSize="9" Foreground="#CBD5E1"/><TextBlock x:Name="HomeIndicatorMemory" Text="—" FontSize="11" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></Button>
+<Button Tag="network" Click="HomeNavigate_Click" Padding="3,7" Margin="1" ToolTip="🌐 Mb/s"><StackPanel><TextBlock Text="🌐 Mb/s" FontSize="9" Foreground="#CBD5E1"/><TextBlock x:Name="HomeIndicatorInternet" Text="—" FontSize="11" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></Button>
+<Button Tag="sql" Click="HomeNavigate_Click" Padding="3,7" Margin="1" ToolTip="🗄 SQL"><StackPanel><TextBlock Text="🗄 SQL" FontSize="9" Foreground="#CBD5E1"/><TextBlock x:Name="HomeIndicatorSql" Text="—" FontSize="11" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></Button>
+<Button Tag="disks" Click="HomeNavigate_Click" Padding="3,7" Margin="1" ToolTip="💾 Discos"><StackPanel><TextBlock Text="💾 Discos" FontSize="9" Foreground="#CBD5E1"/><TextBlock x:Name="HomeIndicatorDisk" Text="—" FontSize="11" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></Button>
+<Button Tag="settings" Click="HomeNavigate_Click" Padding="3,7" Margin="1" ToolTip="🔧 Ajustes"><StackPanel><TextBlock Text="🔧 Ajustes" FontSize="9" Foreground="#CBD5E1"/><TextBlock  Text="Opciones" FontSize="11" Foreground="#65DDB0" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></Button></UniformGrid></Border>
    <TabControl x:Name="Tabs" Grid.Row="2" TabStripPlacement="Left" SelectionChanged="PortalTab_Changed" Background="Transparent" BorderThickness="0" Foreground="#E7EDF5">
-    <TabControl.Resources>
+    <TabControl.Template><ControlTemplate TargetType="TabControl"><ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent"/></ControlTemplate></TabControl.Template><TabControl.Resources>
      <Style TargetType="TabItem"><Setter Property="FontFamily" Value="Segoe UI Emoji"/><Setter Property="FontSize" Value="22"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TabItem"><Border x:Name="Head" Width="48" Height="48" Margin="0,0,12,8" CornerRadius="9" Background="#243247" BorderBrush="Transparent" BorderThickness="1"><ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"><ContentPresenter.ContentTemplate><DataTemplate><TextBlock Text="{Binding}" FontFamily="Segoe UI Emoji" FontSize="22" Foreground="#E7EDF5"/></DataTemplate></ContentPresenter.ContentTemplate></ContentPresenter></Border><ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter TargetName="Head" Property="BorderBrush" Value="#65DDB0"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
     </TabControl.Resources>
     <TabItem x:Name="HomeTab" Header="⌂" ToolTip="Home" AutomationProperties.Name="Home">
@@ -115,7 +112,7 @@
         <StackPanel>
          <DockPanel><Button Content="↻" Click="RefreshUsage_Click" DockPanel.Dock="Right" ToolTip="Consultar límites"/><TextBlock Text="ChatGPT / Codex" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
          <TextBlock Text="Cuotas informadas por tu cuenta en Codex" Foreground="{StaticResource Muted}" FontSize="12"/>
-         <ItemsControl x:Name="CodexQuotas" ItemTemplate="{StaticResource Quota}"/>
+         <ItemsControl x:Name="CodexQuotas" ItemTemplate="{StaticResource Quota}"/><DockPanel Margin="0,5,0,0"><Button Content="‹" Tag="Codex:-1" Click="QuotaPage_Click" DockPanel.Dock="Left" Padding="8,4"/><Button Content="›" Tag="Codex:1" Click="QuotaPage_Click" DockPanel.Dock="Right" Padding="8,4"/><TextBlock x:Name="CodexPage" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/></DockPanel>
          <TextBlock x:Name="CodexStatus" Text="Consultando…" TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,10,0,0"/>
         </StackPanel>
        </Border>
@@ -123,7 +120,7 @@
         <StackPanel>
          <DockPanel><Button Content="Conectar" Click="Claude_Click" DockPanel.Dock="Right"/><TextBlock Text="Claude" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
          <TextBlock Text="Sesión y semana · página de uso" Foreground="{StaticResource Muted}" FontSize="12"/>
-         <ItemsControl x:Name="ClaudeQuotas" ItemTemplate="{StaticResource Quota}"/>
+         <ItemsControl x:Name="ClaudeQuotas" ItemTemplate="{StaticResource Quota}"/><DockPanel Margin="0,5,0,0"><Button Content="‹" Tag="Claude:-1" Click="QuotaPage_Click" DockPanel.Dock="Left" Padding="8,4"/><Button Content="›" Tag="Claude:1" Click="QuotaPage_Click" DockPanel.Dock="Right" Padding="8,4"/><TextBlock x:Name="ClaudePage" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/></DockPanel>
          <TextBlock x:Name="ClaudeStatus" Text="Conecta tu cuenta para leer los porcentajes visibles." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,10,0,0"/>
         </StackPanel>
        </Border>
@@ -159,7 +156,7 @@
       <Border Background="#182638" CornerRadius="9" Padding="12" Margin="0,12,0,10"><TextBlock x:Name="NetworkProbes" TextWrapping="Wrap"/></Border>
       <TextBlock Text="Tráfico por adaptador" FontWeight="SemiBold"/>
       <TextBlock x:Name="NetworkTraffic" TextWrapping="Wrap" Foreground="#65DDB0" FontSize="12" Margin="0,8,0,12"/>
-      <Expander Header="Adaptadores, IP, gateway y DNS" Foreground="#E7EDF5" Margin="0,0,0,12"><ItemsControl x:Name="NetworkAdapters"><ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,8"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></Expander>
+      <Expander Header="Adaptadores, IP, gateway y DNS" Foreground="#E7EDF5" Margin="0,0,0,12"><StackPanel><ItemsControl x:Name="NetworkAdapters"><ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,8"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><DockPanel><Button Content="‹" Tag="-1" Click="AdapterPage_Click" DockPanel.Dock="Left"/><Button Content="›" Tag="1" Click="AdapterPage_Click" DockPanel.Dock="Right"/><TextBlock x:Name="AdapterPage" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/></DockPanel></StackPanel></Expander>
       <TextBlock Text="Cambios recientes" FontWeight="SemiBold"/>
       <TextBlock x:Name="NetworkChanges" TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="11" Margin="0,6,0,12"/>
       <TextBlock Text="Destino interno para comprobar tu VPN (host o IP)" Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"/>
@@ -184,8 +181,7 @@
     </TabItem>
     <TabItem x:Name="SettingsTab" Header="🔧" ToolTip="Ajustes" AutomationProperties.Name="Ajustes">
      <Viewbox Stretch="Uniform" StretchDirection="DownOnly"><Border Width="430"><StackPanel>
-      <TextBlock Text="Posición del menú" FontSize="17" FontWeight="SemiBold" Margin="0,8,0,6"/>
-      <ComboBox x:Name="MenuPositionChoice" Width="180" HorizontalAlignment="Center" Margin="0,0,0,14" SelectionChanged="MenuPosition_Changed"><ComboBoxItem Content="Arriba" Tag="Top"/><ComboBoxItem Content="Abajo" Tag="Bottom"/><ComboBoxItem Content="Izquierda" Tag="Left"/><ComboBoxItem Content="Derecha" Tag="Right"/></ComboBox>
+
       <TextBlock Text="Segundo plano" FontSize="17" FontWeight="SemiBold" Margin="0,8,0,14"/>
       <CheckBox x:Name="AutoStart" Content="Iniciar al entrar en Windows" Foreground="#E7EDF5" Checked="AutoStart_Changed" Unchecked="AutoStart_Changed" Margin="0,0,0,20"/>
       <TextBlock Text="Minutos sin actividad para marcar en verde" Foreground="{StaticResource Muted}"/>
@@ -203,4 +199,6 @@
   </Grid>
  </Border>
 </Window>
+
+
 
