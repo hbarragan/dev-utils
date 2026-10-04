@@ -6,14 +6,14 @@ El clic en la bandeja muestra la vista rápida en la parte inferior derecha, sin
 
 ## Abrir
 
-Ejecuta `Abrir.bat`. Si no existe el ejecutable, compila primero el proyecto. La aplicación distribuida está en `dist/AppUtilDev.exe`.
+Descarga [AppUtilDev.exe](https://github.com/hbarragan/dev-utils/raw/refs/heads/main/AppUtilDev.exe), guárdalo en una carpeta estable donde puedas escribir y ejecútalo. Es una distribución portable para Windows x64: incluye .NET y no requiere instalar el SDK. El primer arranque extrae los componentes internos a la caché de .NET. El icono aparece en la bandeja; `Abrir.bat` muestra la ventana directamente. Microsoft Edge WebView2 Runtime debe estar instalado para las vistas de SQL y Claude.
 
 ```powershell
-./build.ps1
-./dist/AppUtilDev.exe --show
+./build_exe.bat
+./AppUtilDev.exe --show
 ```
 
-La distribución incluye .NET y ASP.NET Core. La interfaz SQL utiliza Microsoft Edge WebView2 Runtime, igual que la conexión de Claude. Compilar desde código requiere el SDK .NET 8 o compatible.
+`build_exe.bat` genera el ejecutable único `AppUtilDev.exe` en la raíz. Compilar desde código requiere el SDK .NET 8 o compatible. `build.ps1` sigue disponible para generar la distribución con archivos separados en `dist`.
 
 ## Portal común
 
@@ -36,7 +36,9 @@ Babelfish ofrece compatibilidad parcial con SQL Server mediante WiltonDB; no eje
 
 ## Datos
 
-En la distribución, SQL guarda `private`, `data`, `trash`, `engines`, `downloads` y `artifacts` junto a la carpeta `dist`. Las credenciales se cifran con DPAPI. Mantén esta carpeta estable para conservar los entornos.
+Con el ejecutable único, SQL guarda `private`, `data`, `trash`, `engines`, `downloads` y `artifacts` junto al EXE. Mantén la aplicación en una carpeta estable para conservar los entornos.
+
+En la distribución con archivos separados, SQL guarda `private`, `data`, `trash`, `engines`, `downloads` y `artifacts` junto a la carpeta `dist`. Las credenciales se cifran con DPAPI. Mantén esta carpeta estable para conservar los entornos.
 
 Si ejecutas la compilación de desarrollo desde `bin`, SQL utiliza `%LOCALAPPDATA%/AppUtilDev/SqlLight`. Puedes fijar otra carpeta con `--root "C:\Ruta"`.
 
@@ -48,7 +50,7 @@ Esta integración utiliza copias del código de los dos proyectos. No modifica l
 
 El botón **Instalar como servicio de Windows** mantiene las bases en segundo plano mediante el servicio `AppUtilDevSql`. El portal se conecta al panel del servicio y continúa mostrando IA, procesos y red desde la sesión del usuario. Cerrar el portal deja el servicio activo.
 
-La instalación requiere permisos de administrador y una distribución compilada en `dist`. Se utiliza un servicio y registro de desinstalación propios, separados del servicio original `SqlLight`. Para desinstalarlo conservando los datos:
+La instalación requiere permisos de administrador y un ejecutable guardado en una carpeta estable (el EXE único o la distribución de `dist`). Se utiliza un servicio y registro de desinstalación propios, separados del servicio original `SqlLight`. Para desinstalarlo conservando los datos:
 
 ```powershell
 ./dist/AppUtilDev.exe --uninstall
@@ -72,4 +74,6 @@ Los resultados y capturas quedan en `artifacts` y se excluyen del control de ver
 ## Código
 
 `src/AppUtilDev` contiene el portal WPF y la monitorización. `src/SqlLight` es el módulo del gestor de datos, enlazado como biblioteca. Su servidor se ejecuta dentro del portal en modo portable, sin un segundo icono de bandeja ni una segunda aplicación SQL. El panel escucha únicamente en `127.0.0.1`, con token por ejecución y controles de origen.
+
+
 

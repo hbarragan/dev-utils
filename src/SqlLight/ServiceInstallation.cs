@@ -80,8 +80,8 @@ public static class ServiceInstallation
     {
         if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)) throw new Exception("Windows requiere permisos de administrador para instalar un servicio.");
         var owner = new SecurityIdentifier(ownerSid);
-        var exe = Path.Combine(root, "dist", "AppUtilDev.exe");
-        if (!File.Exists(exe)) throw new Exception("No se encuentra dist/AppUtilDev.exe.");
+        var exe = Environment.ProcessPath ?? Path.Combine(root, "dist", "AppUtilDev.exe");
+        if (!File.Exists(exe)) throw new Exception("No se encuentra el ejecutable de App Util Dev.");
         if (remove)
         {
             if (!Installed(root)) throw new Exception("Esta carpeta no corresponde al servicio instalado.");

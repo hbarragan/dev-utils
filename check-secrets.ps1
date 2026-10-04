@@ -17,6 +17,12 @@ if ($Staged) {
         $stagedFiles = @(git ls-files)
         if ($LASTEXITCODE -ne 0) { throw 'No se pudo leer el índice Git.' }
         foreach ($relativePath in $stagedFiles) {
+            # The root single-file distribution is explicitly published by build_exe.bat.
+            if ($relativePath -eq 'AppUtilDev.exe') {
+                $binary = [IO.File]::ReadAllBytes((Join-Path $PSScriptRoot $relativePath))
+                if ($binary.Length -lt 2 -or $binary[0] -ne 77 -or $binary[1] -ne 90 -or $binary.Length -ge 100MB) { throw 'Distribución EXE inválida o demasiado grande para GitHub.' }
+                continue
+            }
             if ($relativePath -match '(?i)(^|/)(bin|obj|dist|artifacts|\.codex|ClaudeBrowser|data|logs|screenshots)(/|$)|(^|/)(auth|settings|secrets)\.json$|(^|/)\.env(\.|$)|\.(exe|dll|pdb|db|sqlite\w*|log|pfx|p12|pem|key|dmp|etl|har|zip|7z|csv)$') {
                 $hits += $relativePath
             }

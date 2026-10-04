@@ -41,6 +41,9 @@ internal static class SqlPortal
  internal static string ResolveRoot()
  {
   var folder=new DirectoryInfo(AppContext.BaseDirectory);
+  var executableFolder=Path.GetDirectoryName(Environment.ProcessPath);
+  // Single-file bundles extract runtime assets to a cache; keep user data by the real executable.
+  if(executableFolder!=null && !string.Equals(folder.FullName,executableFolder,StringComparison.OrdinalIgnoreCase)) return executableFolder;
   if(folder.Name.Equals("dist",StringComparison.OrdinalIgnoreCase)) return folder.Parent!.FullName;
   return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"AppUtilDev","SqlLight");
  }
