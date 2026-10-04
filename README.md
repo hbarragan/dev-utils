@@ -4,6 +4,16 @@ Portal de utilidades para desarrolladores en Windows: monitorización de proceso
 
 El clic en la bandeja muestra la vista rápida en la parte inferior derecha, sin barra de título. El menú utiliza iconos con el mismo fondo y tooltips: Home, IA, procesos, memoria, Internet, bases de datos, discos y ajustes. Al hacer clic fuera, se oculta. **Abrir portal ↗** amplía esa misma interfaz; **Vista rápida ↘** vuelve al popup. La Home cabe sin scroll. Procesos, memoria, discos, panel SQL y conexiones disponen de páginas para recorrer listas largas.
 
+## Capturas
+
+Vista rápida con el resumen de procesos, memoria, discos, Internet e IA.
+
+![Home de dev-utils con menú de iconos y resumen del equipo](docs/images/home.png)
+
+Gestor de bases de datos: entornos locales, arranque y conexión JDBC. La captura utiliza un entorno de prueba.
+
+![Gestor de bases de datos de dev-utils con un entorno PostgreSQL de prueba](docs/images/bases-de-datos.png)
+
 ## Abrir
 
 Descarga [AppUtilDev.exe](https://github.com/hbarragan/dev-utils/raw/refs/heads/main/AppUtilDev.exe), guárdalo en una carpeta estable donde puedas escribir y ejecútalo. Es una distribución portable para Windows x64: incluye .NET y no requiere instalar el SDK. El primer arranque extrae los componentes internos a la caché de .NET. El icono aparece en la bandeja; `Abrir.bat` muestra la ventana directamente. Microsoft Edge WebView2 Runtime debe estar instalado para las vistas de SQL y Claude.
@@ -74,6 +84,7 @@ Los resultados y capturas quedan en `artifacts` y se excluyen del control de ver
 ## Código
 
 `src/AppUtilDev` contiene el portal WPF y la monitorización. `src/SqlLight` es el módulo del gestor de datos, enlazado como biblioteca. Su servidor se ejecuta dentro del portal en modo portable, sin un segundo icono de bandeja ni una segunda aplicación SQL. El panel escucha únicamente en `127.0.0.1`, con token por ejecución y controles de origen.
+
 
 
 
