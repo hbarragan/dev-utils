@@ -22,6 +22,8 @@ public sealed class Profile
     public int? Pid { get; set; }
     public long ProcessStart { get; set; }
     public bool Busy { get; set; }
+    public List<StartupScript> Scripts { get; set; } = new();
+    public List<ScriptReceipt> ScriptHistory { get; set; } = new();
     public void Validate()
     {
         if (Engine is not ("postgres" or "mysql" or "sqlserver" or "tds" or "babelfish")) throw new Exception("Motor desconocido.");

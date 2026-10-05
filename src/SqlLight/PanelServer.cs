@@ -27,7 +27,7 @@ public sealed class PanelServer(Store store, Engines engines, bool serviceMode =
         builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(120));
         builder.Services.AddSingleton(this);
         builder.Services.AddHostedService<EngineLifetime>();
-        builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = 16384);
+        builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = 8388608);
         app = builder.Build();
         app.Use(async (ctx, next) =>
         {
@@ -154,6 +154,15 @@ public sealed class PanelServer(Store store, Engines engines, bool serviceMode =
             if (store.Profiles.Any(p => p.Engine == "sqlserver" && p.Port != request.Port)) throw new Exception("Usa el puerto de los perfiles SQL Server existentes.");
             await Engines.Elevated("--sql-configure", request.Port); return Results.Ok();
         }));
+        app.MapGet("/api/profiles/{id}/scripts", (string id) =>
+        {
+            var p = Find(id);
+            return Results.Json(new { defaultSql = StartupScripts.DefaultSql(p), provisioned = p.Provisioned, scripts = StartupScripts.Ordered(p.Scripts), history = p.ScriptHistory });
+        });
+        app.MapPost("/api/profiles/{id}/scripts", async (string id, ScriptsRequest request) => await Locked(() =>
+        {
+            var p = Find(id); StartupScripts.Save(p, request.Scripts); store.Save(); return Task.FromResult(Results.Ok());
+        }));
         app.MapGet("/api/profiles/{id}/connection", (string id) => Results.Json(new { yaml = Find(id).Yaml }));
         app.MapGet("/api/profiles/{id}/logs", async (string id) =>
         {
@@ -222,6 +231,7 @@ public sealed class PanelServer(Store store, Engines engines, bool serviceMode =
         finally { Busy = false; gate.Release(); }
     }
     public record PortRequest(int Port);
+    public record ScriptsRequest(StartupScript[] Scripts);
     public record AutoStartRequest(bool Enabled);
     public record PurgeRequest(string Database);
 }

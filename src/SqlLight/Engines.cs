@@ -166,6 +166,12 @@ public sealed partial class Engines(Store store, string? binariesRoot = null)
     static string PgLiteral(string s) => "'" + s.Replace("'", "''") + "'";
     public async Task Start(Profile p)
     {
+        // Provisioning is the mandatory first step, before any user migration.
+        await StartEngine(p);
+        await RunStartupScripts(p);
+    }
+    async Task StartEngine(Profile p)
+    {
         if (p.Engine == "babelfish") { await StartBabelfish(p); return; }
         if (p.Engine == "tds")
         {

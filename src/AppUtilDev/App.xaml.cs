@@ -29,6 +29,7 @@ public partial class App : Application
    using var monitor=new InternetMonitor();var sample=await monitor.TestAsync();Directory.CreateDirectory("artifacts");File.WriteAllText("artifacts/internet-test.json",System.Text.Json.JsonSerializer.Serialize(sample));Environment.ExitCode=sample?.DownloadMbps.HasValue==true && sample.UploadMbps.HasValue?0:1;Shutdown();return;
   }
   if(e.Args.Contains("--portal-test")) { await PortalTests.RunAsync(); Shutdown(); return; }
+  if(e.Args.Contains("--startup-engine-test")) { Environment.ExitCode=await StartupScriptTests.RunEngineAsync(SqlPortal.Root); Shutdown(); return; }
   if(e.Args.Any(a=>a.StartsWith("--sql-") || a.StartsWith("--service") || a=="--install" || a=="--uninstall"))
   {
    try
