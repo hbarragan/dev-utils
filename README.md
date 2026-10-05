@@ -44,6 +44,27 @@ Cerrar la ventana la oculta y mantiene activos el portal y los motores. **Salir*
 
 Babelfish ofrece compatibilidad parcial con SQL Server mediante WiltonDB; no ejecuta Microsoft SQL Server y no admite MDF ni BAK.
 
+## Scripts de arranque
+
+En **Bases de datos → Opciones → Scripts de arranque** puedes añadir SQL, importar varios `.sql` o una carpeta completa. Se conserva la ruta de versiones, por ejemplo `2.0.0.0/01-schema.sql`, y se ordena numéricamente por versión y nombre. El lanzador de la app sustituye a `init-db.sh`: espera al motor, prepara la base y el usuario con la configuración del entorno y ejecuta los scripts. La inicialización integrada aparece siempre, es de solo lectura y no borra bases ni usuarios. La contraseña se representa como variable en la vista.
+
+Los scripts se aplican **una vez** por defecto. El historial registra checksum SHA-256, fecha y número de ejecuciones; un script ya aplicado no se vuelve a ejecutar ni se puede cambiar con el mismo nombre. Añade una versión nueva para un cambio. **Ejecutar en cada arranque** permite repetir SQL, incluso modificado, cada vez que se levanta el entorno o se reanuda automáticamente al abrir la app. Activa **Levantar al iniciar** en Opciones para ese último caso. Quitar un script conserva su historial; no deshace sus cambios en la base.
+
+Los scripts adicionales usan la conexión de administración sobre la base configurada. PostgreSQL y MySQL reciben el SQL del archivo; SQL Server/Babelfish separan los bloques `GO` sin interpretar los que aparecen dentro de literales o comentarios. Se usa la misma conexión para todos los bloques de un archivo. No se ejecuta Bash, directivas de sqlcmd (`:r`, `:setvar`, `!!`), `GO` con contador ni `DELIMITER`. La compatibilidad T-SQL depende del motor elegido.
+
+Puedes usar `{{DB_NAME}}`, `{{DB_USER}}` y `{{DB_PASSWORD}}` como **tokens completos, sin comillas**. La app escapa identificadores y contraseña según el motor. Ejemplo T-SQL:
+
+```sql
+USE {{DB_NAME}};
+GO
+CREATE TABLE dbo.dev_example (id int PRIMARY KEY);
+GO
+```
+
+Si un archivo falla, se detiene la secuencia y aparece el error en su tarjeta. El motor puede quedar activo y puede haber cambios parciales: los archivos no se envuelven en una transacción global. El siguiente arranque omite los anteriores completados y reintenta el pendiente. Si añades un script que elimina y recrea la base en cada arranque, marca también los scripts de schema y datos para cada arranque; el historial se guarda fuera de la base y no se reinicia al ejecutar `DROP DATABASE`.
+
+SQL e historial se guardan cifrados en `private/state.dat`. No se suben a Git. Importar toma una copia: los cambios posteriores en los archivos de origen no se sincronizan. Límites: 100 scripts, 1 MB por archivo y 4 MB de SQL por entorno. El listado muestra cuatro elementos por página.
+
 ## Datos
 
 Con el ejecutable único, SQL guarda `private`, `data`, `trash`, `engines`, `downloads` y `artifacts` junto al EXE. Mantén la aplicación en una carpeta estable para conservar los entornos.
@@ -75,9 +96,11 @@ La instalación real del servicio no forma parte de las pruebas automáticas del
 ./dist/AppUtilDev.exe --self-test
 ```
 
-`test.ps1` verifica el host SQL en el mismo proceso, protección de la API, creación y persistencia cifrada de perfiles, rechazo de puertos inválidos, telemetría, reinicio y carga del panel real en WebView2. También crea un perfil desde el formulario embebido. Usa una carpeta de pruebas nueva en `artifacts`; no descarga motores ni toca bases existentes.
+`test.ps1` verifica el host SQL en el mismo proceso, protección de la API, creación y persistencia cifrada de perfiles, rechazo de puertos inválidos, telemetría, reinicio y carga del panel real en WebView2. También verifica orden de migraciones, checksums, ejecución única/repetible, fallo y reintento, bloques GO, SQL cifrado, importación, edición y borrado desde el panel embebido. Usa una carpeta de pruebas nueva en `artifacts`; no descarga motores ni toca bases existentes.
 
 `--self-test` comprueba las funciones heredadas de monitorización, procesos, protección, memoria, red, GPU, parsing de cuotas y vistas WPF. Las comprobaciones de integración necesitan los contadores y la sesión local de Codex.
+
+`./AppUtilDev.exe --startup-engine-test` comprueba bootstrap, DDL, bloques GO y repetición tras reinicio en un entorno Babelfish nuevo dentro de `artifacts`; requiere el motor WiltonDB ya preparado.
 
 Los resultados y capturas quedan en `artifacts` y se excluyen del control de versiones.
 

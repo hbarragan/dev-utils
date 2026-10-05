@@ -37,6 +37,7 @@ internal static class PortalTests
   try
   {
    await HardwareTests.RunAsync(Check,root);
+   await StartupScriptTests.RunAsync(Check,root);
    var url=await SqlPortal.StartAsync();
    using var client=new HttpClient {BaseAddress=new Uri(url),Timeout=TimeSpan.FromSeconds(20)};
    var html=await client.GetStringAsync("");
@@ -58,6 +59,12 @@ internal static class PortalTests
    Check("Perfil persistido con credenciales cifradas",saved.Length==1 && saved[0].Database=="portal_test" && !Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(root,"private","state.dat"))).Contains("test-local"));
    var invalid=await client.PostAsync("api/profiles",new StringContent(body.Replace("55432","80"),Encoding.UTF8,"application/json"));
    Check("Puerto inválido rechazado",!invalid.IsSuccessStatusCode && new Store(root).Snapshot().Length==1);
+   var scriptEndpoint="api/profiles/"+saved[0].Id+"/scripts";
+   var scriptBody=JsonSerializer.Serialize(new{scripts=Enumerable.Range(1,5).Select(i=>new{name=$"2.0/{i:D2}-test.sql",sql="SELECT 1; -- encrypted-api-marker",always=false})});
+   Check("API permite añadir scripts por entorno",(await client.PostAsync(scriptEndpoint,new StringContent(scriptBody,Encoding.UTF8,"application/json"))).IsSuccessStatusCode);
+   var scriptsState=JsonDocument.Parse(await client.GetStringAsync(scriptEndpoint));
+   Check("API muestra bootstrap y cinco scripts sin contraseña",scriptsState.RootElement.GetProperty("scripts").GetArrayLength()==5 && !scriptsState.RootElement.GetProperty("defaultSql").GetString()!.Contains("test-local"));
+   Check("SQL importado persistido cifrado",new Store(root).Profiles.Single().Scripts.Count==5 && !Encoding.UTF8.GetString(File.ReadAllBytes(Path.Combine(root,"private","state.dat"))).Contains("encrypted-api-marker"));
    Check("Telemetría accesible",(await client.GetAsync("api/telemetry")).IsSuccessStatusCode);
    Check("Almacenamiento accesible",(await client.GetAsync("api/storage")).IsSuccessStatusCode);
    await SqlPortal.StopAsync(); await SqlPortal.StartAsync();
@@ -138,6 +145,24 @@ internal static class PortalTests
    Check("Explicación distingue RAM y datos persistentes",await web.ExecuteScriptAsync("Boolean(document.getElementById('sql').open && document.getElementById('sql').innerText.includes('RAM') && document.getElementById('sql').innerText.includes('disco'))")=="true");
    await web.ExecuteScriptAsync("document.getElementById('sql').close();document.querySelector('[data-action=options]').click();render()");
    Check("Opciones accesibles en diálogo y conservadas al actualizar",await web.ExecuteScriptAsync("document.getElementById('options').open")=="true");
+   await web.ExecuteScriptAsync("document.querySelector('[data-action=scripts]').click()");
+   for(int i=0;i<100 && await web.ExecuteScriptAsync("document.getElementById('scripts').open")!="true";i++)await Task.Delay(50);
+   Check("Scripts con bootstrap y paginación de cuatro",await web.ExecuteScriptAsync("document.querySelectorAll('#script-list .profile').length===4 && document.getElementById('script-page').textContent==='1 / 2'")=="true");
+   await web.ExecuteScriptAsync("document.querySelector('[data-script-edit]').click()");
+   Check("Bootstrap generado visible y protegido",await web.ExecuteScriptAsync("document.getElementById('script-save').disabled && document.getElementById('script-sql').value.includes('devuser') && !document.getElementById('script-sql').value.includes('test-local')")=="true");
+   await web.ExecuteScriptAsync("document.getElementById('script-editor').close();document.getElementById('script-next').click()");
+   Check("Scripts segunda página mantiene acciones",await web.ExecuteScriptAsync("document.querySelectorAll('#script-list .profile').length===2 && document.querySelectorAll('#script-list [data-script-remove]').length===2")=="true");
+   await web.ExecuteScriptAsync("document.querySelector('[data-script-remove]').click()");
+   for(int i=0;i<100 && new Store(root).Profiles.Single().Scripts.Count!=4;i++)await Task.Delay(50);
+   Check("Quitar script funciona desde su segunda página",new Store(root).Profiles.Single().Scripts.Count==4);
+   await web.ExecuteScriptAsync("document.getElementById('script-new').click();document.getElementById('script-name').value='3.0/01-new.sql';document.getElementById('script-sql').value='SELECT 3;';document.getElementById('script-always').checked=true;document.getElementById('script-save').click()");
+   for(int i=0;i<100 && new Store(root).Profiles.Single().Scripts.Count!=5;i++)await Task.Delay(50);
+   Check("Editor guarda SQL y modo cada arranque",new Store(root).Profiles.Single().Scripts.Any(s=>s.Name=="3.0/01-new.sql" && s.Always && s.Sql=="SELECT 3;"));
+   await Task.Delay(100);
+   await web.ExecuteScriptAsync("const imported=new File(['SELECT 9;'],'01-import.sql');Object.defineProperty(imported,'webkitRelativePath',{value:'init/4.0/01-import.sql'});importScripts({files:[imported],value:'test'});");
+   for(int i=0;i<100 && new Store(root).Profiles.Single().Scripts.Count!=6;i++)await Task.Delay(50);
+   Check("Importar carpeta conserva versión relativa",new Store(root).Profiles.Single().Scripts.Any(s=>s.Name=="4.0/01-import.sql" && !s.Always));
+   await web.ExecuteScriptAsync("document.getElementById('scripts').close()");
    await web.ExecuteScriptAsync("document.getElementById('options').close()");
    await web.ExecuteScriptAsync("metricPending=true;metrics[state.profiles[0].id]={telemetry:{sessions:Array.from({length:11},(_,i)=>({pid:i+1,user:'test',application:'dev',state:'idle',client:'127.0.0.1'}))}};showSessions(state.profiles[0]);");
    Check("Sesiones accesibles por páginas sin scroll",await web.ExecuteScriptAsync("Boolean(document.querySelectorAll('#sessions-content tbody tr').length===4 && document.getElementById('sessions-page').textContent==='1 / 3')")=="true");
